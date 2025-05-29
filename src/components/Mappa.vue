@@ -8,7 +8,9 @@ onMounted(async () => {
   locationGranted.value = granted;
   if (granted) {
      await map.create();
-     await map.moveToUserLocation()
+     await map.addUserLocationMarker(await map.getUserLocation());
+     await map.moveToUserLocation();
+     await map.startWatchingUserLocation();
   }
 })
 

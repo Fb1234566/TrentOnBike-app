@@ -6,8 +6,9 @@ class Map {
     private static maptoken: string = import.meta.env.VITE_MAPBOX_TOKEN;
     private static map: mapboxgl.Map;
     private static locationStatus: boolean = false;
+    private static positionMarker: mapboxgl.Marker;
+    private static watchId: string | null = null;
 
-    private constructor() {}
 
     static async create() {
         mapboxgl.accessToken = Map.maptoken;
@@ -85,6 +86,70 @@ class Map {
         }
     }
 
+    static async addUserLocationMarker(position: [number, number] | null) {
+        // CUSTOM MARKER
+        const MarkerUtente = document.createElement('div');
+        MarkerUtente.style.width = '24px';
+        MarkerUtente.style.height = '24px';
+        MarkerUtente.style.background = '#2196f3';
+        MarkerUtente.style.borderRadius = '50%';
+        MarkerUtente.style.border = '2px solid white';
+        MarkerUtente.style.boxShadow = '0 0 4px rgba(0,0,0,0.3)';
+        if (position){
+            Map.positionMarker = new mapboxgl.Marker({ element: MarkerUtente })
+                .setLngLat(position)
+                .addTo(Map.map);
+        }
+    }
+
+    static async updateUserLocationMarker(userLocation: [number, number] | null) {
+            if (userLocation) {
+                Map.positionMarker.setLngLat(userLocation);
+            } else {
+                console.warn('Impossibile ottenere la posizione dell\'utente.');
+            }
+    }
+
+    static async startWatchingUserLocation() {
+        const platform = Capacitor.getPlatform();
+        if (platform === 'android' || platform === 'ios') { // Check se la piattaforma è Android o iOS
+            try {
+                if (Map.locationStatus) {
+                    Map.watchId = await Geolocation.watchPosition({}, (position, err) => {
+                        if (err) {
+                            console.error('Errore durante il controllo della posizione (Capacitor):', err);
+                            return;
+                        }
+                        if (!position || !position.coords) {
+                            console.warn('Posizione non disponibile (Capacitor)');
+                            return;
+                        }
+                        const userLocation: [number, number] = [position.coords.longitude, position.coords.latitude];
+                        Map.updateUserLocationMarker(userLocation);
+                    })
+                }
+            } catch (error) {
+                console.error('Errore geolocalizzazione (Capacitor):', error);
+                return null;
+            }
+        } else {
+            return new Promise((resolve) => { // PWA
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const userLocation: [number, number] = [longitude, latitude];
+                        Map.updateUserLocationMarker(userLocation);
+                    },
+                    (error) => {
+                        console.error('Errore geolocalizzazione (PWA):', error);
+                        resolve(null);
+                    },
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            });
+        }
+    }
+
     static async moveToUserLocation() {
         const userLocation = await Map.getUserLocation();
         if (userLocation) {
@@ -93,20 +158,6 @@ class Map {
                 zoom: 10,
                 essential: true // Questo assicura che l'animazione sia sempre eseguita
             });
-
-            // CUSTOM MARKER
-            const MarkerUtente = document.createElement('div');
-            MarkerUtente.style.width = '24px';
-            MarkerUtente.style.height = '24px';
-            MarkerUtente.style.background = '#2196f3';
-            MarkerUtente.style.borderRadius = '50%';
-            MarkerUtente.style.border = '2px solid white';
-            MarkerUtente.style.boxShadow = '0 0 4px rgba(0,0,0,0.3)';
-            new mapboxgl.Marker({ element: MarkerUtente })
-                .setLngLat(userLocation)
-                .addTo(Map.map);
-            console.log(Map.locationStatus);
-
         } else {
             console.warn('Impossibile ottenere la posizione dell\'utente.');
         }
