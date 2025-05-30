@@ -33,7 +33,14 @@ const routes: Array<RouteRecordRaw> = [
       }
     ]
   },
-  {path: '/',
+  {
+    path: '/report-issue',
+    component: () => import('@/views/ReportIssuePage.vue'),
+    // controllo autenticazione e ruolo utente (commenta per test senza autenticazione)
+    meta: { requiresAuth: true, allowedRoles: ['utente']}
+  },
+  {
+    path: '/',
     redirect: () => {
       if (!isAuthenticated()) {
         return { name: 'Login' };
@@ -46,7 +53,7 @@ const routes: Array<RouteRecordRaw> = [
     }
    },
   {
-     path: '/login',
+    path: '/login',
     name: 'Login',
     component: LoginPage,
     beforeEnter: (to, from, next) => {

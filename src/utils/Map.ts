@@ -6,18 +6,24 @@ class Map {
     private static maptoken: string = import.meta.env.VITE_MAPBOX_TOKEN;
     private static map: mapboxgl.Map;
     private static locationStatus: boolean = false;
-    private static positionMarker: mapboxgl.Marker;
+    private static positionMarker: mapboxgl.Marker; // Marker blu dell'utente
     private static watchId: string | null = null;
+    static selectedMarker: mapboxgl.Marker | null = null; // Marker rosso selezionato
 
 
-    static async create() {
+    static async create(center: [number, number] = [12.5451, 41.8988]) {
+        if (!document.getElementById('mappa')) {
+            console.error('Errore: Container con ID "mappa" non trovato.');
+            return;
+        }
+
         mapboxgl.accessToken = Map.maptoken;
         setTimeout(() => {
             Map.map = new mapboxgl.Map({
                 container: 'mappa',
                 style: 'mapbox://styles/mapbox/streets-v12',
-                center: [12.5451, 41.8988],
-                zoom: 1
+                center, // Usa il centro definito come parametro o il centro preimpostato
+                zoom: 1 // Zoom iniziale
             });
         });
     }
@@ -86,20 +92,43 @@ class Map {
         }
     }
 
-    static async addUserLocationMarker(position: [number, number] | null) {
-        // CUSTOM MARKER
-        const MarkerUtente = document.createElement('div');
-        MarkerUtente.style.width = '24px';
-        MarkerUtente.style.height = '24px';
-        MarkerUtente.style.background = '#2196f3';
-        MarkerUtente.style.borderRadius = '50%';
-        MarkerUtente.style.border = '2px solid white';
-        MarkerUtente.style.boxShadow = '0 0 4px rgba(0,0,0,0.3)';
-        if (position){
-            Map.positionMarker = new mapboxgl.Marker({ element: MarkerUtente })
-                .setLngLat(position)
-                .addTo(Map.map);
+    static async addUserLocationMarker(position: [number, number]) {
+        if (!Map.map) return;
+
+        if (Map.positionMarker) {
+            Map.positionMarker.setLngLat(position); // Sposta il marker blu
+        } else {
+            // CUSTOM MARKER
+            const MarkerUtente = document.createElement('div');
+            MarkerUtente.style.width = '24px';
+            MarkerUtente.style.height = '24px';
+            MarkerUtente.style.background = '#2196f3';
+            MarkerUtente.style.borderRadius = '50%';
+            MarkerUtente.style.border = '2px solid white';
+            MarkerUtente.style.boxShadow = '0 0 4px rgba(0,0,0,0.3)';
+            if (position) {
+                Map.positionMarker = new mapboxgl.Marker({element: MarkerUtente})
+                    .setLngLat(position)
+                    .addTo(Map.map);
+            }
         }
+    }
+
+    static async addSelectedMarker(position: [number, number]) {
+        // Rimuove l'ultimo marker selezionato
+        if (Map.selectedMarker) {
+            Map.selectedMarker.remove();
+        }
+        // Crea un marker rosso (per la posizione selezionata cliccando sulla mappa)
+        const MarkerSelezionato = document.createElement('div');
+        MarkerSelezionato.style.width = '24px';
+        MarkerSelezionato.style.height = '24px';
+        MarkerSelezionato.style.background = '#ff0000'; // Marker rosso
+        MarkerSelezionato.style.borderRadius = '50%';
+        MarkerSelezionato.style.border = '2px solid white';
+        Map.selectedMarker = new mapboxgl.Marker({ element: MarkerSelezionato })
+            .setLngLat(position)
+            .addTo(Map.map);
     }
 
     static async updateUserLocationMarker(userLocation: [number, number] | null) {
@@ -158,6 +187,7 @@ class Map {
                 zoom: 10,
                 essential: true // Questo assicura che l'animazione sia sempre eseguita
             });
+            await Map.addUserLocationMarker(userLocation);
         } else {
             console.warn('Impossibile ottenere la posizione dell\'utente.');
         }
