@@ -1,0 +1,20 @@
+{
+  "settingsTitle": "User Settings",
+  "generalPreferences": "General Preferences",
+  "language": "Language",
+  "theme": "Application Theme",
+  "notificationsPOINearby": "Nearby POI Notifications",
+  "saveSettingsButton": "Save Settings",
+  "retryButton": "Retry",
+  "loadingSettings": "Loading settings...",
+  "selectLanguage": "Select Language",
+  "selectTheme": "Select Theme",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System Default",
+  "errorLoadingSettings": "Could not load settings.",
+  "errorSavingSettings": "Error saving settings.",
+  "settingsSavedSuccess": "Settings saved successfully!",
+  "authRequiredSettings": "You must be authenticated to view settings.",
+  "invalidDataOrNotAuth": "Invalid data or user not authenticated."
+}

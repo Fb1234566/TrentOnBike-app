@@ -1,0 +1,20 @@
+{
+  "settingsTitle": "Benutzereinstellungen",
+  "generalPreferences": "Allgemeine Einstellungen",
+  "language": "Sprache",
+  "theme": "Anwendungsthema",
+  "notificationsPOINearby": "Benachrichtigungen für POIs in der Nähe",
+  "saveSettingsButton": "Einstellungen speichern",
+  "retryButton": "Wiederholen",
+  "loadingSettings": "Einstellungen werden geladen...",
+  "selectLanguage": "Sprache auswählen",
+  "selectTheme": "Thema auswählen",
+  "themeLight": "Hell",
+  "themeDark": "Dunkel",
+  "themeSystem": "Systemstandard",
+  "errorLoadingSettings": "Einstellungen konnten nicht geladen werden.",
+  "errorSavingSettings": "Fehler beim Speichern der Einstellungen.",
+  "settingsSavedSuccess": "Einstellungen erfolgreich gespeichert!",
+  "authRequiredSettings": "Sie müssen authentifiziert sein, um die Einstellungen anzuzeigen.",
+  "invalidDataOrNotAuth": "Ungültige Daten oder Benutzer nicht authentifiziert."
+}

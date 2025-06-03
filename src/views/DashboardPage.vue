@@ -42,9 +42,13 @@
             </ion-list>
           </ion-card-content>
         </ion-card>
-        <div v-else class="ion-text-center ion-padding">
+        <div v-else-if="isLoadingUser" class="ion-text-center ion-padding">
             <ion-spinner name="crescent"></ion-spinner>
             <p>Caricamento dati operatore...</p>
+        </div>
+        <div v-else class="ion-text-center ion-padding">
+            <p>Impossibile caricare i dati operatore o accesso non autorizzato.</p>
+            <ion-button @click="router.push('/login')">Torna al Login</ion-button>
         </div>
       </div>
     </ion-content>
@@ -52,8 +56,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonButton, IonIcon,
   IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent, IonList, IonItem, IonLabel,
@@ -61,57 +66,38 @@ import {
 } from '@ionic/vue';
 import { logOutOutline, documentTextOutline, statsChartOutline, settingsOutline } from 'ionicons/icons';
 
-interface OperatorUser {
-  _id?: string;
-  nome?: string;
-  cognome?: string;
-  email?: string;
-  ruolo?: string;
-}
-
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+console.log('DashboardPage.vue: Script setup');
 
 const router = useRouter();
-const operatorUser = ref<OperatorUser | null>(null);
+const authStore = useAuthStore();
+
+// Computed property to get the user from the store
+const operatorUser = computed(() => authStore.user);
+const isLoadingUser = ref(true);
 
 onMounted(() => {
-  const storedUserData = localStorage.getItem('userData');
-  if (storedUserData) {
-    try {
-        const parsedUser = JSON.parse(storedUserData) as OperatorUser;
-        if (parsedUser.ruolo === 'operatore') {
-        operatorUser.value = parsedUser;
-        } else {
-        console.warn('Accesso alla dashboard da utente non operatore, reindirizzamento.');
-        router.replace('/main');
-        }
-    } catch(e) {
-        console.error("Errore parsing dati operatore:", e);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userData');
-        router.replace('/login');
-    }
+  console.log('DashboardPage.vue: Component mounted');
+  // Auth store should already be populated by App.vue or router guards
+  // We check if the user is loaded and has the correct role
+  if (authStore.isAuthenticated && authStore.userRole === 'operatore') {
+    console.log('DashboardPage.vue: Operator user confirmed', operatorUser.value);
+    isLoadingUser.value = false;
+  } else if (authStore.isAuthenticated && authStore.userRole !== 'operatore') {
+    console.warn('DashboardPage.vue: User is authenticated but not an operator. Role:', authStore.userRole, '. Redirecting.');
+    router.replace('/tabs/mappa'); // Or /main for non-operator users
+    isLoadingUser.value = false;
   } else {
+    // Not authenticated, router guard should have handled this, but as a fallback:
+    console.warn('DashboardPage.vue: User not authenticated or role check failed. Redirecting to login.');
     router.replace('/login');
+    isLoadingUser.value = false;
   }
 });
 
 const handleLogout = async () => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-    } catch (error) { console.warn("Errore API logout:", error); }
-  }
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('userData');
-  operatorUser.value = null;
-  const toast = await toastController.create({ message: 'Logout effettuato.', duration: 2000, color: 'medium', position: 'top' });
-  await toast.present();
-  router.push('/login');
+  console.log('DashboardPage.vue: handleLogout called');
+  await authStore.logout();
+  router.replace('/login'); // replace to prevent back button to dashboard
 };
 
 const manageReports = async () => {
