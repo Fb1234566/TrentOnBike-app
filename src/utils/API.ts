@@ -207,6 +207,75 @@ class API {
             throw new Error('Errore di rete o server non raggiungibile');
         }
     }
+
+    // Metodo per ottenere tutte le segnalazioni (accessibile agli operatori)
+    static async caricaTutteLeSegnalazioni(params: {
+        stati?: string[];
+        categorie?: string[];
+        daData?: string;
+        aData?: string;
+        ordine?: string;
+        direzione?: 'asc' | 'desc';
+    } = {}): Promise<any[]> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+
+        const queryParams = new URLSearchParams();
+        if (params.stati) queryParams.set('stati', params.stati.join(','));
+        if (params.categorie) queryParams.set('categorie', params.categorie.join(','));
+        if (params.daData) queryParams.set('daData', params.daData);
+        if (params.aData) queryParams.set('aData', params.aData);
+        if (params.ordine) queryParams.set('ordine', params.ordine);
+        if (params.direzione) queryParams.set('direction', params.direzione);
+
+        const url = `${this.baseUrl}/segnalazioni?${queryParams.toString()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per ottenere i dettagli di una singola segnalazione
+    static async caricaDettaglioSegnalazione(id: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/segnalazioni/${id}`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per segnare una segnalazione come "letta"
+    static async segnaSegnalazioneComeLetta(id: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/segnalazioni/${id}/lettura`, { // Corretto da "/letta" a "/lettura"
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per ottenere una variabile globale Timestamp
+    static async getGlobalTimestamp(key: string): Promise<{ key: string; value: string }> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/globalTimestamps/${key}`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
+    }
 }
 
 export default API;

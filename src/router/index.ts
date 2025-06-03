@@ -83,6 +83,16 @@ const routes: Array<RouteRecordRaw> = [
       return '/login';
     },
   },
+    {
+        path: '/reports',
+        name: 'Reports',
+        component: () => import ('@/views/AllReportsPage.vue'),
+    },
+    {
+        path: '/reports/:id',
+        name: 'ReportDetails',
+        component: () => import ('@/views/ReportDetailsPage.vue'),
+    },
 ];
 
 const router = createRouter({

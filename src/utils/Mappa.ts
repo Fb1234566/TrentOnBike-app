@@ -14,11 +14,12 @@ class Mappa {
     static selectedMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker rosso selezionato
     static puntiDiInteresse: any[] = []; // Array per i punti di interesse
     static puntiDiInteresseMarkers: Map<string, mapboxgl.Marker[]> = new Map(); // Array per i marker dei punti di interesse
+    static segnalazioniMarkers: mapboxgl.Marker[] = []; // Array i marker delle segnalazioni
 
 
     static async create(mapId: string, mapElement: string, center: [number, number] = [12.5451, 41.8988]) {
         if (!document.getElementById(mapElement)) {
-            console.error('Errore: Container con ID "mappa" non trovato.');
+            console.error(`Errore: Container con ID "${mapElement}" non trovato.`);
             return;
         }
 
@@ -147,6 +148,27 @@ class Mappa {
         }
     }
 
+    static async addSegnalazioniMarker(mapId: string, position: [number, number]): Promise<void> {
+        // Crea un marker rosso
+        const MarkerSelezionato = document.createElement('div');
+        MarkerSelezionato.style.width = '24px';
+        MarkerSelezionato.style.height = '24px';
+        MarkerSelezionato.style.background = '#ff0000'; // Marker rosso
+        MarkerSelezionato.style.borderRadius = '50%';
+        MarkerSelezionato.style.border = '2px solid white';
+
+        const marker = new mapboxgl.Marker({ element: MarkerSelezionato })
+            .setLngLat(position)
+            .addTo(Mappa.maps.get(mapId));
+
+        Mappa.segnalazioniMarkers.push(marker); // Aggiunge il marker ad array di marker
+    }
+
+    static clearSegnalazioniMarkers(mapId: string): void {
+        Mappa.maps.get(mapId).markers.forEach((marker) => marker.remove());
+        Mappa.segnalazioniMarkers = []; // Svuota array di markers
+    }
+
     static async startWatchingUserLocation(mapId: string) {
         const platform = Capacitor.getPlatform();
         if (platform === 'android' || platform === 'ios') { // Check se la piattaforma è Android o iOS
@@ -199,7 +221,18 @@ class Mappa {
         } else {
             console.warn('Impossibile ottenere la posizione dell\'utente.');
         }
+    }
 
+    static async moveToLocation(mapId: string, position: [number, number], zoom: number = 12) {
+        if (!Mappa.maps.get(mapId)) {
+            console.error("Mappa non inizializzata. Impossibile effettuare lo spostamento.");
+            return;
+        }
+        Mappa.maps.get(mapId).flyTo({
+            center: position,
+            zoom: zoom,
+            essential: true, // Garantisce l'animazione anche in caso di preferenze di riduzione dei movimenti
+        });
     }
 
     static async insertPuntiDiInteresse(mapId: string, onMarkerClick?: (punto: any) => void) {
