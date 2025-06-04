@@ -16,7 +16,7 @@
         <ion-card>
           <ion-card-header>
             <ion-card-title>{{ authStore.user.nome }} {{ authStore.user.cognome || '' }}</ion-card-title>
-            <ion-card-subtitle>{{ authStore.user.ruolo | capitalize }}</ion-card-subtitle>
+            <ion-card-subtitle>{{ capitalize(authStore.user.ruolo) }}</ion-card-subtitle>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="none">
@@ -38,7 +38,7 @@
                <ion-item>
                 <ion-icon :icon="shieldCheckmarkOutline" slot="start" color="primary"></ion-icon>
                 <ion-label>Ruolo</ion-label>
-                <ion-note slot="end">{{ authStore.user.ruolo | capitalize }}</ion-note>
+                <ion-note slot="end">{{ capitalize(authStore.user.ruolo) }}</ion-note>
               </ion-item>
             </ion-list>
           </ion-card-content>
@@ -81,13 +81,20 @@ import {
 import { mailOutline, logOutOutline, personCircleOutline, personOutline, shieldCheckmarkOutline } from 'ionicons/icons';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
+import { applyTheme } from '@/utils/theme';
+import { useI18n } from 'vue-i18n';
+
 
 const authStore = useAuthStore();
 const router = useRouter();
+const { locale: i18nLocale } = useI18n();
+
 
 const handleLogout = async () => {
   try {
-    await authStore.logout(); 
+    await authStore.logout();
+    applyTheme('SISTEMA');
+    i18nLocale.value = getInitialLocaleForLogout();
     const toast = await toastController.create({
         message: 'Logout effettuato con successo.',
         duration: 2000,
@@ -110,27 +117,18 @@ const goToLogin = () => {
   router.push({ name: 'Login' });
 };
 
-const filters = {
-  capitalize: (value: string) => {
-    if (!value) return '';
-    value = value.toString();
-    return value.charAt(0).toUpperCase() + value.slice(1);
-  }
+const capitalize = (value: string) => {
+  if (!value) return '';
+  value = value.toString();
+  return value.charAt(0).toUpperCase() + value.slice(1);
 };
-</script>
 
-<script lang="ts">
-export default {
-  filters: {
-    capitalize: (value: string) => {
-      if (!value) return '';
-      value = value.toString();
-      return value.charAt(0).toUpperCase() + value.slice(1);
-    }
-  }
+function getInitialLocaleForLogout(): 'it' | 'en' | 'de' {
+    const browserLang = navigator.language.split('-')[0];
+    const supportedLangs = ['it', 'en', 'de'];
+    return supportedLangs.includes(browserLang) ? browserLang as 'it' | 'en' | 'de' : 'it';
 }
 </script>
-
 
 <style scoped>
 ion-card-title {

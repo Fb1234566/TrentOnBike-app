@@ -1,19 +1,27 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import { API_BASE_URL } from '@/config';
 
-// SPOSTIAMO API_BASE_URL QUI PER AUTH, LA CLASSE API USERÀ IL SUO.
-const AUTH_API_BASE_URL = import.meta.env.VITE_API_URL_AUTH || import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api/v1/auth';
+const AUTH_SERVICE_BASE_URL = import.meta.env.VITE_API_URL_AUTH || `${API_BASE_URL}/auth`;
 
+export interface UserSettings {
+  lingua: 'it' | 'en' | 'de';
+  tema: 'CHIARO' | 'SCURO' | 'SISTEMA';
+  notifichePOIVicini: boolean;
+  _id?: string;
+  utenteId?: string;
+  updatedAt?: string;
+  createdAt?: string;
+}
 
-interface User {
+export interface User {
   _id: string;
   email: string;
   nome: string;
   cognome?: string;
-  ruolo: 'utente' | 'operatore' | 'admin'; // Tipi di ruolo più specifici
-  // Aggiungi altri campi se restituiti dal backend e necessari globalmente
-  impostazioni?: any; // Sostituisci any con l'interfaccia corretta
-  statistiche?: any;  // Sostituisci any con l'interfaccia corretta
+  ruolo: 'utente' | 'operatore' | 'admin';
+  impostazioni?: UserSettings;
+  statistiche?: any;
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -64,7 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
     cognome?: string;
   }): Promise<{ success: boolean; message?: string; user?: User }> {
     try {
-      const response = await fetch(`${AUTH_API_BASE_URL}/register`, {
+      const response = await fetch(`${AUTH_SERVICE_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -83,12 +91,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function logout(): Promise<void> {
-    // Chiamata API opzionale per invalidare il token lato server
     const currentToken = token.value;
-    clearAuthData(); // Pulisci sempre lato client
+    clearAuthData();
     if (currentToken) {
         try {
-            await fetch(`${AUTH_API_BASE_URL}/logout`, {
+            await fetch(`${AUTH_SERVICE_BASE_URL}/logout`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${currentToken}` }
             });
@@ -114,6 +121,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  function updateUserImpostazioni(newSettings: UserSettings) {
+    if (user.value) {
+      user.value.impostazioni = { ...user.value.impostazioni, ...newSettings };
+      localStorage.setItem('authUser', JSON.stringify(user.value));
+    }
+  }
+
   return {
     token,
     user,
@@ -125,5 +139,6 @@ export const useAuthStore = defineStore('auth', () => {
     setAuthData,
     clearAuthData,
     loadUserFromStorage,
+    updateUserImpostazioni,
   };
 });

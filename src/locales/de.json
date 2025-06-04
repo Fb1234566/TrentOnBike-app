@@ -16,5 +16,6 @@
   "errorSavingSettings": "Fehler beim Speichern der Einstellungen.",
   "settingsSavedSuccess": "Einstellungen erfolgreich gespeichert!",
   "authRequiredSettings": "Sie müssen authentifiziert sein, um die Einstellungen anzuzeigen.",
-  "invalidDataOrNotAuth": "Ungültige Daten oder Benutzer nicht authentifiziert."
+  "invalidDataOrNotAuth": "Ungültige Daten oder Benutzer nicht authentifiziert.",
+  "settingsTabLabel": "Einstellungen"
 }

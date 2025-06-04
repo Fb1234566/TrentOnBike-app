@@ -3,11 +3,6 @@
     <ion-header>
       <ion-toolbar color="primary">
         <ion-title>{{ $t('settingsTitle') }}</ion-title>
-         <ion-buttons slot="end">
-          <ion-button v-if="authStore.isAuthenticated" @click="handleLogout">
-            <ion-icon slot="icon-only" :icon="logOutOutline"></ion-icon>
-          </ion-button>
-        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true" class="ion-padding">
@@ -62,9 +57,14 @@
         {{ $t('saveSettingsButton') }}
       </ion-button>
 
-      <div v-if="!isLoading && !settingsData" class="ion-text-center ion-padding">
-        <p>{{ $t('errorLoadingSettings') }}</p>
+      <div v-if="!isLoading && !settingsData && authStore.isAuthenticated" class="ion-text-center ion-padding">
+        <p>{{ errorMessage || $t('errorLoadingSettings') }}</p>
         <ion-button @click="loadSettings">{{ $t('retryButton') }}</ion-button>
+      </div>
+
+       <div v-if="!authStore.isAuthenticated && !isLoading" class="ion-padding ion-text-center">
+        <p>{{ $t('authRequiredSettings') }}</p>
+        <ion-button expand="block" @click="goToLogin" class="ion-margin-top">Login</ion-button>
       </div>
 
     </ion-content>
@@ -78,9 +78,8 @@ import { useAuthStore, UserSettings } from '@/stores/auth';
 import { API_BASE_URL } from '@/config';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonListHeader, IonItem, IonLabel,
-  IonSelect, IonSelectOption, IonToggle, IonButton, IonSpinner, toastController, IonButtons, IonIcon
+  IonSelect, IonSelectOption, IonToggle, IonButton, IonSpinner, toastController
 } from '@ionic/vue';
-import { logOutOutline } from 'ionicons/icons';
 import { applyTheme } from '@/utils/theme';
 import { useI18n } from 'vue-i18n';
 
@@ -91,33 +90,38 @@ const { locale: i18nLocale, t } = useI18n();
 const settingsData = ref<UserSettings | null>(null);
 const isLoading = ref(true);
 const isSaving = ref(false);
+const errorMessage = ref<string | null>(null);
 
-watch(settingsData, (newSettings) => {
-  if (newSettings?.tema) {
-    applyTheme(newSettings.tema);
+watch(() => authStore.user?.impostazioni, (newSettings) => {
+  if (newSettings) {
+    settingsData.value = { ...newSettings }; // Clone to avoid direct mutation before save
+    if (newSettings.tema) applyTheme(newSettings.tema);
+    if (newSettings.lingua) i18nLocale.value = newSettings.lingua;
   }
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 
 onMounted(() => {
   if (authStore.isAuthenticated) {
-    loadSettings();
+    if (authStore.user?.impostazioni) {
+       settingsData.value = { ...authStore.user.impostazioni }; // Initialize from store if available
+       isLoading.value = false;
+    } else {
+        loadSettings(); // Fetch if not in store
+    }
   } else {
     isLoading.value = false;
-    toastController.create({
-      message: t('authRequiredSettings'),
-      duration: 3000,
-      color: 'warning',
-      position: 'top'
-    }).then(toast => toast.present());
-    router.replace('/login');
+    // No toast here, message is shown in template
   }
 });
 
 const loadSettings = async () => {
   isLoading.value = true;
+  errorMessage.value = null;
   if (!authStore.token) {
     isLoading.value = false;
+    authStore.clearAuthData(); // Ensure clean state
+    router.replace('/login');
     return;
   }
   try {
@@ -127,18 +131,15 @@ const loadSettings = async () => {
       }
     });
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: `Error ${response.status}` }));
-      throw new Error(errorData.message);
+      const errorData = await response.json().catch(() => ({ message: `Error ${response.status}: ${response.statusText}` }));
+      throw new Error(errorData.message || t('errorLoadingSettings'));
     }
-    const data = await response.json();
-    settingsData.value = data;
-    if (data.tema) {
-        applyTheme(data.tema);
-    }
-    if (data.lingua) {
-        i18nLocale.value = data.lingua;
-    }
+    const data: UserSettings = await response.json();
+    authStore.updateUserImpostazioni(data); // Update store first
+    settingsData.value = { ...data }; // Then update local reactive ref
+    
   } catch (error: any) {
+    errorMessage.value = error.message;
     toastController.create({
       message: error.message || t('errorLoadingSettings'),
       duration: 3000,
@@ -162,6 +163,7 @@ const saveSettings = async () => {
     return;
   }
   isSaving.value = true;
+  errorMessage.value = null;
   try {
     const response = await fetch(`${API_BASE_URL}/users/me/impostazioni`, {
       method: 'PATCH',
@@ -171,21 +173,13 @@ const saveSettings = async () => {
       },
       body: JSON.stringify(settingsData.value)
     });
-    const responseData = await response.json();
+    const responseData: UserSettings = await response.json();
     if (!response.ok) {
-      throw new Error(responseData.message || `Error ${response.status}`);
+      throw new Error(`Error ${response.status}: ${response.statusText}` || t('errorSavingSettings'));
     }
     
-    authStore.updateUserImpostazioni(responseData); // Update store
-    settingsData.value = responseData; // Update local ref with response (e.g. for updatedAt)
-
-
-    if (responseData.tema) {
-        applyTheme(responseData.tema);
-    }
-    if (responseData.lingua) {
-        i18nLocale.value = responseData.lingua;
-    }
+    authStore.updateUserImpostazioni(responseData);
+    settingsData.value = { ...responseData }; // update local ref with saved data
 
     toastController.create({
       message: t('settingsSavedSuccess'),
@@ -194,6 +188,7 @@ const saveSettings = async () => {
       position: 'top'
     }).then(toast => toast.present());
   } catch (error: any) {
+    errorMessage.value = error.message;
     toastController.create({
       message: error.message || t('errorSavingSettings'),
       duration: 3000,
@@ -206,33 +201,25 @@ const saveSettings = async () => {
 };
 
 const handleThemeChange = (event: CustomEvent) => {
-  const newTheme = event.detail.value;
+  const newTheme = event.detail.value as UserSettings['tema'];
   if (settingsData.value) {
     settingsData.value.tema = newTheme;
-    applyTheme(newTheme); // Apply theme immediately for UX
+    applyTheme(newTheme);
   }
 };
 
 const handleLanguageChange = (event: CustomEvent) => {
-  const newLang = event.detail.value;
+  const newLang = event.detail.value as UserSettings['lingua'];
   if (settingsData.value) {
     settingsData.value.lingua = newLang;
-    i18nLocale.value = newLang; // Apply language immediately for UX
+    i18nLocale.value = newLang;
   }
 };
 
-const handleLogout = async () => {
-  await authStore.logout();
-  applyTheme('SISTEMA'); 
-  i18nLocale.value = getInitialLocaleForLogout();
-  router.replace('/login');
+const goToLogin = () => {
+  router.push({ name: 'Login' });
 };
 
-function getInitialLocaleForLogout(): 'it' | 'en' | 'de' {
-    const browserLang = navigator.language.split('-')[0];
-    const supportedLangs = ['it', 'en', 'de'];
-    return supportedLangs.includes(browserLang) ? browserLang as 'it' | 'en' | 'de' : 'it';
-}
 </script>
 
 <style scoped>

@@ -1,7 +1,8 @@
 import { useAuthStore } from '@/stores/auth';
+import { API_BASE_URL } from '@/config';
 
 class API {
-    static baseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:3000/api/v1';
+    static baseUrl = API_BASE_URL;
 
     private static getAuthToken(): string | null {
         try {
@@ -9,7 +10,7 @@ class API {
             return authStore.token;
         } catch (error) {
             console.error("API.getAuthToken: Errore accesso store Pinia. Pinia è installato e attivo?", error);
-            return localStorage.getItem('authToken'); // Fallback molto rischioso
+            return localStorage.getItem('authToken');
         }
     }
 
@@ -26,7 +27,7 @@ class API {
                     errorMessage = errorText || `Errore server: ${errorText.substring(0,100)}`;
                 }
             } catch (e) {
-                // Non fare nulla se il parsing fallisce, errorMessage di default è già impostato
+                // Non fare nulla
             }
             throw new Error(errorMessage);
         }
