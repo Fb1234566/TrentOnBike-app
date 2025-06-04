@@ -10,7 +10,7 @@
         <ion-card class="login-card">
           <ion-card-header>
             <ion-card-title class="ion-text-center">Benvenuto!</ion-card-title>
-            <ion-card-subtitle class="ion-text-center">Accedi o continua come ospite</ion-card-subtitle>
+            <ion-card-subtitle class="ion-text-center">Accedi per continuare</ion-card-subtitle>
           </ion-card-header>
           <ion-card-content>
             <ion-list lines="full" class="ion-no-margin">
@@ -57,16 +57,6 @@
               Accedi
             </ion-button>
 
-            <ion-button
-              expand="block"
-              fill="outline"
-              @click="continueAsGuest"
-              class="ion-margin-top"
-              color="secondary"
-            >
-              Continua come Ospite
-            </ion-button>
-
             <div v-if="errorMessage" class="error-message ion-text-center ion-margin-top">
               {{ errorMessage }}
             </div>
@@ -86,17 +76,19 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonInput,
   IonButton, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
   IonIcon, IonText, IonSpinner, toastController
 } from '@ionic/vue';
 import { mailOutline, lockClosedOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
-
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
+
 const credentials = ref({
   email: '',
   password: ''
@@ -117,58 +109,40 @@ const handleLogin = async () => {
   isLoading.value = true;
   errorMessage.value = '';
 
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials.value),
-    });
+  const result = await authStore.login(credentials.value);
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      errorMessage.value = data.message || `Errore ${response.status}: Impossibile effettuare il login.`;
-      const toast = await toastController.create({
-        message: errorMessage.value,
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
-      await toast.present();
-    } else {
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userData', JSON.stringify(data.user));
-
-      const toast = await toastController.create({
-        message: data.message || 'Accesso effettuato con successo!',
-        duration: 2000,
-        color: 'success',
-        position: 'top'
-      });
-      await toast.present();
-      router.push('/');
-    }
-  } catch (error) {
-    console.error('Login error:', error);
-    errorMessage.value = 'Errore di connessione o del server. Riprova più tardi.';
+  if (result.success && result.user) {
     const toast = await toastController.create({
-        message: errorMessage.value,
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
+      message: result.message || 'Accesso effettuato con successo!',
+      duration: 2000,
+      color: 'success',
+      position: 'top'
+    });
     await toast.present();
-  } finally {
-    isLoading.value = false;
-  }
-};
 
-const continueAsGuest = () => {
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('userData');
-  router.push('/main');
+    // Reindirizza alla pagina desiderata dopo il login
+    const redirectPath = route.query.redirect as string | undefined;
+    if (redirectPath) {
+        router.replace(redirectPath);
+    } else {
+        // Logica di reindirizzamento basata sul ruolo
+        if (result.user.ruolo === 'operatore') {
+            router.replace({ path: '/tabs/statistiche' });
+        } else {
+            router.replace({ path: '/tabs/mappa' });
+        }
+    }
+  } else {
+    errorMessage.value = result.message || 'Errore imprevisto durante il login.';
+    const toast = await toastController.create({
+      message: errorMessage.value,
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  }
+  isLoading.value = false;
 };
 </script>
 
@@ -184,8 +158,6 @@ const continueAsGuest = () => {
 .login-card {
   width: 100%;
   max-width: 400px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  border-radius: 12px;
 }
 
 ion-card-title {
@@ -203,11 +175,7 @@ ion-card-title {
   text-decoration: none;
   font-weight: 500;
 }
-.register-link:hover {
-  text-decoration: underline;
-}
 .password-toggle-icon {
   cursor: pointer;
-  font-size: 1.2em;
 }
 </style>
