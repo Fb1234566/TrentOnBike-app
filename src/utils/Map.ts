@@ -2,6 +2,8 @@ import mapboxgl from 'mapbox-gl';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
 import API from "@/utils/API";
+import * as turf from '@turf/turf';
+
 
 class Map {
     private static maptoken: string = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -211,6 +213,18 @@ class Map {
                 }
             });
         })
+    }
+
+    static async returnDistanceBetweenUserAndMarker(position: [number, number]): Promise<string> {
+        const userLocation = await this.getUserLocation();
+        if (!userLocation) return "errore";
+
+        // Crea punti turf (nota: turf usa [lng, lat] mentre le coordinate standard sono [lat, lng])
+        const userPoint = turf.point([userLocation[1], userLocation[0]]);
+        const markerPoint = turf.point([position[1], position[0]]);
+
+        // Calcola la distanza in metri
+        return `${turf.distance(userPoint, markerPoint, {units: 'kilometers'}).toFixed(2)} km`;
     }
 }
 

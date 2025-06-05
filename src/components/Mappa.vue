@@ -16,6 +16,7 @@ import SearchBarMappa from './SearchBarMappa.vue';
 
 const locationGranted = ref(true);
 const puntoSelezionato = ref(null);
+const distanza = ref("km");
 
 onMounted(async () => {
   const granted = await map.checkGeolocationPermission();
@@ -25,6 +26,10 @@ onMounted(async () => {
      await map.addUserLocationMarker(await map.getUserLocation());
      await map.insertPuntiDiInteresse((punto) => {
        puntoSelezionato.value = punto;
+       map.returnDistanceBetweenUserAndMarker(punto.posizione).then((distanzaInMetri) => {
+         distanza.value = distanzaInMetri;
+         console.log(distanzaInMetri);
+       });
        map.getMap().flyTo({
          center: punto.posizione,
          zoom: 16,
@@ -46,19 +51,61 @@ const chiudiCard = () => {
 // Funzione per gestire la selezione di un POI dalla barra di ricerca
 const handleSelectPOI = (poi) => {
   puntoSelezionato.value = poi;
+  map.returnDistanceBetweenUserAndMarker(poi.posizione).then((distanzaInMetri) => {
+    distanza.value = distanzaInMetri;
+    console.log(distanzaInMetri);
+  });
   map.getMap().flyTo({
     center: poi.posizione,
     zoom: 16,
     essential: true
   });
 }
-</script>
+const richiediPermessi = async () => {
+  const granted = await map.checkGeolocationPermission();
+  locationGranted.value = granted;
+  if (granted) {
+    await map.create();
+    await map.addUserLocationMarker(await map.getUserLocation());
+    await map.insertPuntiDiInteresse((punto) => {
+      puntoSelezionato.value = punto;
+      map.returnDistanceBetweenUserAndMarker(punto.posizione).then((distanzaInMetri) => {
+        distanza.value = distanzaInMetri;
+        console.log(distanzaInMetri);
+      });
+      map.getMap().flyTo({
+        center: punto.posizione,
+        zoom: 16,
+        essential: true // Questo assicura che l'animazione sia sempre eseguita
+      });
+      console.log(punto)
+    });
+    await map.moveToUserLocation();
+    await map.startWatchingUserLocation();
+
+  }
+}
+</script>distanza
 
 <template>
   <!-- Barra di ricerca in cima alla pagina -->
-  <div class="search-container">
+  <div class="search-container" v-if="locationGranted">
     <SearchBarMappa @select-poi="handleSelectPOI" />
   </div>
+  <!-- Card di errore per permessi di posizione non concessi -->
+  <ion-card v-if="!locationGranted" class="error-message">
+    <ion-card-header>
+      <ion-card-title>Accesso alla posizione negato</ion-card-title>
+      <ion-card-subtitle>La tua posizione è necessaria per utilizzare la mappa</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-text>
+        <p>Per utilizzare questa funzionalità, devi consentire l'accesso alla tua posizione.</p>
+        <p>Puoi modificare le impostazioni di autorizzazione nel tuo browser e riprovare.</p>
+      </ion-text>
+    </ion-card-content>
+  </ion-card>
 
   <div v-if="locationGranted" id="mappa" style="height: 100%"></div>
   <!-- Dettagli del marker selezionato -->
@@ -71,6 +118,7 @@ const handleSelectPOI = (poi) => {
         <ion-icon aria-hidden="true" :icon="closeOutline" />
       </ion-button>
       <ion-card-title>{{ puntoSelezionato.nome }}</ion-card-title>
+      <ion-card-subtitle>{{ distanza }}</ion-card-subtitle>
       <ion-card-subtitle v-if="puntoSelezionato.tipoPoi">{{ puntoSelezionato.tipoPoi }}</ion-card-subtitle>
     </ion-card-header>
 
