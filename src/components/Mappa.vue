@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import map from '../utils/Map'
 import { onMounted, ref } from 'vue';
+import { closeOutline } from 'ionicons/icons'
+import {
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonCardContent,
+  IonText,
+  IonButton,
+  IonIcon
+} from '@ionic/vue';
 const locationGranted = ref(true);
+const puntoSelezionato = ref(null);
 
 onMounted(async () => {
   const granted = await map.checkGeolocationPermission();
@@ -9,24 +21,48 @@ onMounted(async () => {
   if (granted) {
      await map.create();
      await map.addUserLocationMarker(await map.getUserLocation());
+     await map.insertPuntiDiInteresse((punto) => {
+       puntoSelezionato.value = punto;
+       map.getMap().flyTo({
+         center: punto.posizione,
+         zoom: 16,
+         essential: true // Questo assicura che l'animazione sia sempre eseguita
+       });
+       console.log(punto)
+     });
      await map.moveToUserLocation();
      await map.startWatchingUserLocation();
+
   }
 })
+
+// Funzione per chiudere la card
+const chiudiCard = () => {
+  puntoSelezionato.value = null;
+}
 
 </script>
 
 <template>
   <div v-if="locationGranted" id="mappa" style="height: 100%"></div>
-
-  <ion-card v-if="!locationGranted" class="error-message">
+  <!-- Dettagli del marker selezionato -->
+  <ion-card v-if="puntoSelezionato"
+            style="position: fixed; bottom: 0; left: 0; width: 100%; margin: 0;
+                  max-height: 200px; z-index: 1000; overflow-y: auto; border-radius: 0;">
     <ion-card-header>
-      <ion-card-title>Permesso negato</ion-card-title>
+      <ion-button fill="clear" size="small" @click="chiudiCard"
+                  style="position: absolute; top: 5px; right: 5px;">
+        <ion-icon aria-hidden="true" :icon="closeOutline" />
+      </ion-button>
+      <ion-card-title>{{ puntoSelezionato.nome }}</ion-card-title>
+      <ion-card-subtitle v-if="puntoSelezionato.tipoPoi">{{ puntoSelezionato.tipoPoi }}</ion-card-subtitle>
     </ion-card-header>
+
     <ion-card-content>
-      Permesso di geolocalizzazione negato. Impossibile visualizzare la mappa.
+      <ion-text>{{ puntoSelezionato.descrizione }}</ion-text>
     </ion-card-content>
   </ion-card>
+
 
 </template>
 
@@ -35,4 +71,4 @@ onMounted(async () => {
   margin: 2rem;
   text-align: center;
 }
-</style>
+</style>Quand
