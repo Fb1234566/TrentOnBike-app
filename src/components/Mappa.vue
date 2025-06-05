@@ -12,6 +12,8 @@ import {
   IonButton,
   IonIcon
 } from '@ionic/vue';
+import SearchBarMappa from './SearchBarMappa.vue';
+
 const locationGranted = ref(true);
 const puntoSelezionato = ref(null);
 
@@ -41,9 +43,23 @@ const chiudiCard = () => {
   puntoSelezionato.value = null;
 }
 
+// Funzione per gestire la selezione di un POI dalla barra di ricerca
+const handleSelectPOI = (poi) => {
+  puntoSelezionato.value = poi;
+  map.getMap().flyTo({
+    center: poi.posizione,
+    zoom: 16,
+    essential: true
+  });
+}
 </script>
 
 <template>
+  <!-- Barra di ricerca in cima alla pagina -->
+  <div class="search-container">
+    <SearchBarMappa @select-poi="handleSelectPOI" />
+  </div>
+
   <div v-if="locationGranted" id="mappa" style="height: 100%"></div>
   <!-- Dettagli del marker selezionato -->
   <ion-card v-if="puntoSelezionato"
@@ -62,8 +78,6 @@ const chiudiCard = () => {
       <ion-text>{{ puntoSelezionato.descrizione }}</ion-text>
     </ion-card-content>
   </ion-card>
-
-
 </template>
 
 <style scoped>
@@ -71,4 +85,15 @@ const chiudiCard = () => {
   margin: 2rem;
   text-align: center;
 }
-</style>Quand
+
+.search-container {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 400px;
+  z-index: 1000;
+  padding: 0 15px;
+}
+</style>
