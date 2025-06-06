@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import map from '../utils/Map'
+import map from '@/utils/Mappa';
 import { onMounted, ref } from 'vue';
 import { closeOutline } from 'ionicons/icons'
 import {
@@ -22,22 +22,22 @@ onMounted(async () => {
   const granted = await map.checkGeolocationPermission();
   locationGranted.value = granted;
   if (granted) {
-     await map.create();
-     await map.addUserLocationMarker(await map.getUserLocation());
-     await map.insertPuntiDiInteresse((punto) => {
+     await map.create("home-map", "home-map");
+     await map.addUserLocationMarker("home-map", await map.getUserLocation());
+     await map.insertPuntiDiInteresse("home-map", (punto) => {
        puntoSelezionato.value = punto;
        map.returnDistanceBetweenUserAndMarker(punto.posizione).then((distanzaInMetri) => {
          distanza.value = distanzaInMetri;
          console.log(distanzaInMetri);
        });
-       map.getMap().flyTo({
+       map.getMap("home-map").flyTo({
          center: punto.posizione,
          zoom: 16,
          essential: true // Questo assicura che l'animazione sia sempre eseguita
        });
        console.log(punto)
      });
-     await map.moveToUserLocation();
+     await map.moveToUserLocation("home-map");
      await map.startWatchingUserLocation();
 
   }
@@ -55,35 +55,11 @@ const handleSelectPOI = (poi) => {
     distanza.value = distanzaInMetri;
     console.log(distanzaInMetri);
   });
-  map.getMap().flyTo({
+  map.getMap("home-map").flyTo({
     center: poi.posizione,
     zoom: 16,
     essential: true
   });
-}
-const richiediPermessi = async () => {
-  const granted = await map.checkGeolocationPermission();
-  locationGranted.value = granted;
-  if (granted) {
-    await map.create();
-    await map.addUserLocationMarker(await map.getUserLocation());
-    await map.insertPuntiDiInteresse((punto) => {
-      puntoSelezionato.value = punto;
-      map.returnDistanceBetweenUserAndMarker(punto.posizione).then((distanzaInMetri) => {
-        distanza.value = distanzaInMetri;
-        console.log(distanzaInMetri);
-      });
-      map.getMap().flyTo({
-        center: punto.posizione,
-        zoom: 16,
-        essential: true // Questo assicura che l'animazione sia sempre eseguita
-      });
-      console.log(punto)
-    });
-    await map.moveToUserLocation();
-    await map.startWatchingUserLocation();
-
-  }
 }
 </script>distanza
 
@@ -107,7 +83,7 @@ const richiediPermessi = async () => {
     </ion-card-content>
   </ion-card>
 
-  <div v-if="locationGranted" id="mappa" style="height: 100%"></div>
+  <div v-if="locationGranted" id="home-map" style="height: 100%"></div>
   <!-- Dettagli del marker selezionato -->
   <ion-card v-if="puntoSelezionato"
             style="position: fixed; bottom: 0; left: 0; width: 100%; margin: 0;
