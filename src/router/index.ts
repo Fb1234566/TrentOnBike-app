@@ -45,6 +45,11 @@ const routes: Array<RouteRecordRaw> = [
         name: 'Settings',
         component: () => import('@/views/SettingsPage.vue'),
         meta: { requiresAuth: true },
+      },
+      {
+        path: 'percorsi',
+        name: 'Percorsi',
+        component: () => import('@/views/PercorsiPage.vue')
       }
     ],
   },
