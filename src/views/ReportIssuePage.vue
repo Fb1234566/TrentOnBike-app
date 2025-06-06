@@ -17,7 +17,7 @@
             <ion-card-title>Seleziona la posizione</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <div id="mappa" style="height: 300px;"></div>
+            <div id="segnalazione-map" style="height: 300px;"></div>
             <p>Posizione selezionata: {{ formData.posizione.coordinates }}</p>
             <ion-button expand="block" @click="resetToCurrentLocation">
               Torna alla tua posizione corrente
@@ -101,8 +101,8 @@ import {
   IonSelectOption,
   IonTextarea
 } from '@ionic/vue';
-import { onMounted, ref } from 'vue';
-import Map from '@/utils/Map';
+import {onMounted, ref} from 'vue';
+import Map from '@/utils/Mappa';
 import API from '@/utils/API';
 
 // Lista locale delle categorie allineata al backend
@@ -125,17 +125,17 @@ const loading = ref(false);
 /** Inizializza la mappa e gestisce la logica del marker */
 const initMappa = async () => {
   const posizioneUtente = await Map.getUserLocation();
-  await Map.create(posizioneUtente ?? [12.5451, 41.8988]);
+  await Map.create("segnalazione-map", "segnalazione-map",  posizioneUtente ?? [12.5451, 41.8988]);
   if (posizioneUtente) {
     formData.value.posizione.coordinates = posizioneUtente;
-    await Map.addUserLocationMarker(posizioneUtente);
-    await Map.moveToUserLocation();
+    await Map.addUserLocationMarker("segnalazione-map", posizioneUtente);
+    await Map.moveToUserLocation("segnalazione-map");
   }
   // Gestisci il click per selezionare una nuova posizione
-  Map.getMap().on('click', (e) => {
+  Map.getMap("segnalazione-map").on('click', (e) => {
     const { lng, lat } = e.lngLat;
     formData.value.posizione.coordinates = [lng, lat]; // Aggiorna le coordinate nel form
-    Map.addSelectedMarker([lng, lat]); // Aggiungi marker rosso
+    Map.addSelectedMarker("segnalazione-map",[lng, lat]); // Aggiungi marker rosso
   });
 };
 
@@ -144,8 +144,8 @@ const resetToCurrentLocation = async () => {
   const posizioneUtente = await Map.getUserLocation();
   if (posizioneUtente) {
     formData.value.posizione.coordinates = posizioneUtente;
-    await Map.addUserLocationMarker(posizioneUtente); // Aggiorna il marker blu
-    await Map.moveToUserLocation(); // Sposta la mappa sulla posizione corrente
+    await Map.addUserLocationMarker("segnalazione-map", posizioneUtente); // Aggiorna il marker blu
+    await Map.moveToUserLocation("segnalazione-map"); // Sposta la mappa sulla posizione corrente
     if (Map.selectedMarker) {
       Map.selectedMarker.remove(); // Rimuovi il marker rosso
     }

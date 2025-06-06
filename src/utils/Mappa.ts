@@ -5,38 +5,38 @@ import API from "@/utils/API";
 import * as turf from '@turf/turf';
 
 
-class Map {
+class Mappa {
     private static maptoken: string = import.meta.env.VITE_MAPBOX_TOKEN;
-    private static map: mapboxgl.Map;
+    private static maps = new Map(); // Mappa per gestire più mappe se necessario
     private static locationStatus: boolean = false;
-    private static positionMarker: mapboxgl.Marker; // Marker blu dell'utente
+    private static positionMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker blu dell'utente
     private static watchId: string | null = null;
-    static selectedMarker: mapboxgl.Marker | null = null; // Marker rosso selezionato
+    static selectedMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker rosso selezionato
     static puntiDiInteresse: any[] = []; // Array per i punti di interesse
-    static puntiDiInteresseMarkers: mapboxgl.Marker[] = []; // Array per i marker dei punti di interesse
+    static puntiDiInteresseMarkers: Map<string, mapboxgl.Marker[]> = new Map(); // Array per i marker dei punti di interesse
 
 
-    static async create(center: [number, number] = [12.5451, 41.8988]) {
-        if (!document.getElementById('mappa')) {
+    static async create(mapId: string, mapElement: string, center: [number, number] = [12.5451, 41.8988]) {
+        if (!document.getElementById(mapElement)) {
             console.error('Errore: Container con ID "mappa" non trovato.');
             return;
         }
 
-        mapboxgl.accessToken = Map.maptoken;
+        mapboxgl.accessToken = Mappa.maptoken;
         setTimeout(() => {
-            Map.map = new mapboxgl.Map({
-                container: 'mappa',
+            Mappa.maps.set(mapId, new mapboxgl.Map({
+                container: mapElement,
                 style: 'mapbox://styles/mapbox/streets-v12',
                 center, // Usa il centro definito come parametro o il centro preimpostato
                 zoom: 1 // Zoom iniziale
-            });
+            }));
         });
-        Map.puntiDiInteresse = await API.getPuntiDiInteresse()
-        console.log('Punti di interesse caricati:', Map.puntiDiInteresse);
+        Mappa.puntiDiInteresse = await API.getPuntiDiInteresse()
+        console.log('Punti di interesse caricati:', Mappa.puntiDiInteresse);
     }
 
-    static getMap(): mapboxgl.Map {
-        return Map.map;
+    static getMap(mapId: string): mapboxgl.Map {
+        return Mappa.maps.get(mapId);
     }
 
     static async checkGeolocationPermission(): Promise<boolean> {
@@ -44,8 +44,8 @@ class Map {
         if (platform === 'android' || platform === 'ios') { // Check se la piattaforma è Android o iOS
             try {
                 const permStatus = await Geolocation.checkPermissions();
-                Map.locationStatus = permStatus.location === 'granted' || permStatus.coarseLocation === 'granted'
-                return Map.locationStatus;
+                Mappa.locationStatus = permStatus.location === 'granted' || permStatus.coarseLocation === 'granted'
+                return Mappa.locationStatus;
             } catch (error) {
                 console.warn('Errore controllo permessi (Capacitor):', error);
                 return false;
@@ -66,8 +66,8 @@ class Map {
                 });
             }
 
-            Map.locationStatus = permission.state === 'granted';
-            return Map.locationStatus;
+            Mappa.locationStatus = permission.state === 'granted';
+            return Mappa.locationStatus;
         }
     }
 
@@ -99,11 +99,11 @@ class Map {
         }
     }
 
-    static async addUserLocationMarker(position: [number, number]) {
-        if (!Map.map) return;
+    static async addUserLocationMarker(mapId: string, position: [number, number]) {
+        if (!Mappa.maps.get(mapId)) return;
 
-        if (Map.positionMarker) {
-            Map.positionMarker.setLngLat(position); // Sposta il marker blu
+        if (Mappa.positionMarker.get(mapId) !== undefined) {
+            Mappa.positionMarker.get(mapId).setLngLat(position); // Sposta il marker blu
         } else {
             // CUSTOM MARKER
             const MarkerUtente = document.createElement('div');
@@ -114,17 +114,17 @@ class Map {
             MarkerUtente.style.border = '2px solid white';
             MarkerUtente.style.boxShadow = '0 0 4px rgba(0,0,0,0.3)';
             if (position) {
-                Map.positionMarker = new mapboxgl.Marker({element: MarkerUtente})
+                Mappa.positionMarker.set(mapId, new mapboxgl.Marker({element: MarkerUtente})
                     .setLngLat(position)
-                    .addTo(Map.map);
+                    .addTo(Mappa.maps.get(mapId)));
             }
         }
     }
 
-    static async addSelectedMarker(position: [number, number]) {
+    static async addSelectedMarker(mapId: string, position: [number, number]) {
         // Rimuove l'ultimo marker selezionato
-        if (Map.selectedMarker) {
-            Map.selectedMarker.remove();
+        if (Mappa.selectedMarker.get(mapId) !== undefined) {
+            Mappa.selectedMarker.get(mapId).remove();
         }
         // Crea un marker rosso (per la posizione selezionata cliccando sulla mappa)
         const MarkerSelezionato = document.createElement('div');
@@ -133,25 +133,25 @@ class Map {
         MarkerSelezionato.style.background = '#ff0000'; // Marker rosso
         MarkerSelezionato.style.borderRadius = '50%';
         MarkerSelezionato.style.border = '2px solid white';
-        Map.selectedMarker = new mapboxgl.Marker({element: MarkerSelezionato})
+        Mappa.selectedMarker.set(mapId, new mapboxgl.Marker({element: MarkerSelezionato})
             .setLngLat(position)
-            .addTo(Map.map);
+            .addTo(Mappa.maps.get(mapId)));
     }
 
-    static async updateUserLocationMarker(userLocation: [number, number] | null) {
-        if (userLocation) {
-            Map.positionMarker.setLngLat(userLocation);
+    static async updateUserLocationMarker(mapId: string, userLocation: [number, number] | null) {
+        if (userLocation && Mappa.positionMarker.has(mapId)) {
+            Mappa.positionMarker.get(mapId).setLngLat(userLocation);
         } else {
             console.warn('Impossibile ottenere la posizione dell\'utente.');
         }
     }
 
-    static async startWatchingUserLocation() {
+    static async startWatchingUserLocation(mapId: string) {
         const platform = Capacitor.getPlatform();
         if (platform === 'android' || platform === 'ios') { // Check se la piattaforma è Android o iOS
             try {
-                if (Map.locationStatus) {
-                    Map.watchId = await Geolocation.watchPosition({}, (position, err) => {
+                if (Mappa.locationStatus) {
+                    Mappa.watchId = await Geolocation.watchPosition({}, (position, err) => {
                         if (err) {
                             console.error('Errore durante il controllo della posizione (Capacitor):', err);
                             return;
@@ -161,7 +161,7 @@ class Map {
                             return;
                         }
                         const userLocation: [number, number] = [position.coords.longitude, position.coords.latitude];
-                        Map.updateUserLocationMarker(userLocation);
+                        Mappa.updateUserLocationMarker(mapId, userLocation);
                     })
                 }
             } catch (error) {
@@ -174,7 +174,7 @@ class Map {
                     (position) => {
                         const {latitude, longitude} = position.coords;
                         const userLocation: [number, number] = [longitude, latitude];
-                        Map.updateUserLocationMarker(userLocation);
+                        Mappa.updateUserLocationMarker(mapId, userLocation);
                     },
                     (error) => {
                         console.error('Errore geolocalizzazione (PWA):', error);
@@ -186,27 +186,31 @@ class Map {
         }
     }
 
-    static async moveToUserLocation() {
-        const userLocation = await Map.getUserLocation();
+    static async moveToUserLocation(mapId: string) {
+        const userLocation = await Mappa.getUserLocation();
         if (userLocation) {
-            this.map.flyTo({
+            this.maps.get(mapId).flyTo({
                 center: userLocation,
                 zoom: 10,
                 essential: true // Questo assicura che l'animazione sia sempre eseguita
             });
-            await Map.addUserLocationMarker(userLocation);
+            await Mappa.addUserLocationMarker(mapId, userLocation);
         } else {
             console.warn('Impossibile ottenere la posizione dell\'utente.');
         }
 
     }
 
-    static async insertPuntiDiInteresse(onMarkerClick?: (punto: any) => void) {
-        Map.puntiDiInteresse.forEach(punto => {
+    static async insertPuntiDiInteresse(mapId: string, onMarkerClick?: (punto: any) => void) {
+        Mappa.puntiDiInteresse.forEach(punto => {
             const marker = new mapboxgl.Marker()
                 .setLngLat([punto.posizione[0], punto.posizione[1]])
-                .addTo(Map.map);
-            Map.puntiDiInteresseMarkers.push(marker);
+                .addTo(Mappa.maps.get(mapId));
+            if ( !(Mappa.puntiDiInteresseMarkers.has(mapId) || Mappa.puntiDiInteresseMarkers.get(mapId) !== undefined)) {
+                Mappa.puntiDiInteresseMarkers.set(mapId, []);
+            }
+            Mappa.puntiDiInteresseMarkers.get(mapId).push(marker);
+
             marker.getElement().addEventListener('click', () => {
                 if (onMarkerClick) {
                     onMarkerClick(punto);
@@ -228,4 +232,4 @@ class Map {
     }
 }
 
-export default Map;
+export default Mappa;
