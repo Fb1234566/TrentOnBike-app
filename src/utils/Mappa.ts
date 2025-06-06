@@ -9,9 +9,9 @@ class Mappa {
     private static maptoken: string = import.meta.env.VITE_MAPBOX_TOKEN;
     private static maps = new Map(); // Mappa per gestire più mappe se necessario
     private static locationStatus: boolean = false;
-    private static positionMarker: mapboxgl.Marker; // Marker blu dell'utente
+    private static positionMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker blu dell'utente
     private static watchId: string | null = null;
-    static selectedMarker: mapboxgl.Marker | null = null; // Marker rosso selezionato
+    static selectedMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker rosso selezionato
     static puntiDiInteresse: any[] = []; // Array per i punti di interesse
     static puntiDiInteresseMarkers: mapboxgl.Marker[] = []; // Array per i marker dei punti di interesse
 
@@ -102,8 +102,8 @@ class Mappa {
     static async addUserLocationMarker(mapId: string, position: [number, number]) {
         if (!Mappa.maps.get(mapId)) return;
 
-        if (Mappa.positionMarker) {
-            Mappa.positionMarker.setLngLat(position); // Sposta il marker blu
+        if (Mappa.positionMarker.get(mapId) !== undefined) {
+            Mappa.positionMarker.get(mapId).setLngLat(position); // Sposta il marker blu
         } else {
             // CUSTOM MARKER
             const MarkerUtente = document.createElement('div');
@@ -114,17 +114,17 @@ class Mappa {
             MarkerUtente.style.border = '2px solid white';
             MarkerUtente.style.boxShadow = '0 0 4px rgba(0,0,0,0.3)';
             if (position) {
-                Mappa.positionMarker = new mapboxgl.Marker({element: MarkerUtente})
+                Mappa.positionMarker.set(mapId, new mapboxgl.Marker({element: MarkerUtente})
                     .setLngLat(position)
-                    .addTo(Mappa.maps.get(mapId));
+                    .addTo(Mappa.maps.get(mapId)));
             }
         }
     }
 
     static async addSelectedMarker(mapId: string, position: [number, number]) {
         // Rimuove l'ultimo marker selezionato
-        if (Mappa.selectedMarker) {
-            Mappa.selectedMarker.remove();
+        if (Mappa.selectedMarker.get(mapId) !== undefined) {
+            Mappa.selectedMarker.get(mapId).remove();
         }
         // Crea un marker rosso (per la posizione selezionata cliccando sulla mappa)
         const MarkerSelezionato = document.createElement('div');
@@ -133,20 +133,20 @@ class Mappa {
         MarkerSelezionato.style.background = '#ff0000'; // Marker rosso
         MarkerSelezionato.style.borderRadius = '50%';
         MarkerSelezionato.style.border = '2px solid white';
-        Mappa.selectedMarker = new mapboxgl.Marker({element: MarkerSelezionato})
+        Mappa.selectedMarker.set(mapId, new mapboxgl.Marker({element: MarkerSelezionato})
             .setLngLat(position)
-            .addTo(Mappa.maps.get(mapId));
+            .addTo(Mappa.maps.get(mapId)));
     }
 
-    static async updateUserLocationMarker(userLocation: [number, number] | null) {
-        if (userLocation) {
-            Mappa.positionMarker.setLngLat(userLocation);
+    static async updateUserLocationMarker(mapId: string, userLocation: [number, number] | null) {
+        if (userLocation && Mappa.positionMarker.get(mapId)) {
+            Mappa.positionMarker.get(mapId).setLngLat(userLocation);
         } else {
             console.warn('Impossibile ottenere la posizione dell\'utente.');
         }
     }
 
-    static async startWatchingUserLocation() {
+    static async startWatchingUserLocation(mapId: string) {
         const platform = Capacitor.getPlatform();
         if (platform === 'android' || platform === 'ios') { // Check se la piattaforma è Android o iOS
             try {
@@ -161,7 +161,7 @@ class Mappa {
                             return;
                         }
                         const userLocation: [number, number] = [position.coords.longitude, position.coords.latitude];
-                        Mappa.updateUserLocationMarker(userLocation);
+                        Mappa.updateUserLocationMarker(mapId, userLocation);
                     })
                 }
             } catch (error) {
@@ -174,7 +174,7 @@ class Mappa {
                     (position) => {
                         const {latitude, longitude} = position.coords;
                         const userLocation: [number, number] = [longitude, latitude];
-                        Mappa.updateUserLocationMarker(userLocation);
+                        Mappa.updateUserLocationMarker(mapId, userLocation);
                     },
                     (error) => {
                         console.error('Errore geolocalizzazione (PWA):', error);
