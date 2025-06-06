@@ -1,6 +1,9 @@
 import mapboxgl from 'mapbox-gl';
 import { Capacitor } from '@capacitor/core';
 import { Geolocation } from '@capacitor/geolocation';
+import API from "@/utils/API";
+import * as turf from '@turf/turf';
+
 
 class Map {
     private static maptoken: string = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -9,6 +12,8 @@ class Map {
     private static positionMarker: mapboxgl.Marker; // Marker blu dell'utente
     private static watchId: string | null = null;
     static selectedMarker: mapboxgl.Marker | null = null; // Marker rosso selezionato
+    static puntiDiInteresse: any[] = []; // Array per i punti di interesse
+    static puntiDiInteresseMarkers: mapboxgl.Marker[] = []; // Array per i marker dei punti di interesse
 
 
     static async create(center: [number, number] = [12.5451, 41.8988]) {
@@ -26,6 +31,8 @@ class Map {
                 zoom: 1 // Zoom iniziale
             });
         });
+        Map.puntiDiInteresse = await API.getPuntiDiInteresse()
+        console.log('Punti di interesse caricati:', Map.puntiDiInteresse);
     }
 
     static getMap(): mapboxgl.Map {
@@ -48,7 +55,7 @@ class Map {
                 console.warn('Permissions API non supportata.');
                 return false;
             }
-            const permission = await navigator.permissions.query({ name: 'geolocation' });
+            const permission = await navigator.permissions.query({name: 'geolocation'});
             if (permission.state === 'prompt') {
                 // Forza la richiesta del permesso
                 return new Promise((resolve) => {
@@ -79,14 +86,14 @@ class Map {
             return new Promise((resolve) => { // PWA
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const { latitude, longitude } = position.coords;
+                        const {latitude, longitude} = position.coords;
                         resolve([longitude, latitude]);
                     },
                     (error) => {
                         console.error('Errore geolocalizzazione (PWA):', error);
                         resolve(null);
                     },
-                    { enableHighAccuracy: true, timeout: 5000 }
+                    {enableHighAccuracy: true, timeout: 5000}
                 );
             });
         }
@@ -126,17 +133,17 @@ class Map {
         MarkerSelezionato.style.background = '#ff0000'; // Marker rosso
         MarkerSelezionato.style.borderRadius = '50%';
         MarkerSelezionato.style.border = '2px solid white';
-        Map.selectedMarker = new mapboxgl.Marker({ element: MarkerSelezionato })
+        Map.selectedMarker = new mapboxgl.Marker({element: MarkerSelezionato})
             .setLngLat(position)
             .addTo(Map.map);
     }
 
     static async updateUserLocationMarker(userLocation: [number, number] | null) {
-            if (userLocation) {
-                Map.positionMarker.setLngLat(userLocation);
-            } else {
-                console.warn('Impossibile ottenere la posizione dell\'utente.');
-            }
+        if (userLocation) {
+            Map.positionMarker.setLngLat(userLocation);
+        } else {
+            console.warn('Impossibile ottenere la posizione dell\'utente.');
+        }
     }
 
     static async startWatchingUserLocation() {
@@ -165,7 +172,7 @@ class Map {
             return new Promise((resolve) => { // PWA
                 navigator.geolocation.watchPosition(
                     (position) => {
-                        const { latitude, longitude } = position.coords;
+                        const {latitude, longitude} = position.coords;
                         const userLocation: [number, number] = [longitude, latitude];
                         Map.updateUserLocationMarker(userLocation);
                     },
@@ -173,7 +180,7 @@ class Map {
                         console.error('Errore geolocalizzazione (PWA):', error);
                         resolve(null);
                     },
-                    { enableHighAccuracy: true, timeout: 5000 }
+                    {enableHighAccuracy: true, timeout: 5000}
                 );
             });
         }
@@ -182,7 +189,7 @@ class Map {
     static async moveToUserLocation() {
         const userLocation = await Map.getUserLocation();
         if (userLocation) {
-            Map.map.flyTo({
+            this.map.flyTo({
                 center: userLocation,
                 zoom: 10,
                 essential: true // Questo assicura che l'animazione sia sempre eseguita
@@ -192,6 +199,32 @@ class Map {
             console.warn('Impossibile ottenere la posizione dell\'utente.');
         }
 
+    }
+
+    static async insertPuntiDiInteresse(onMarkerClick?: (punto: any) => void) {
+        Map.puntiDiInteresse.forEach(punto => {
+            const marker = new mapboxgl.Marker()
+                .setLngLat([punto.posizione[0], punto.posizione[1]])
+                .addTo(Map.map);
+            Map.puntiDiInteresseMarkers.push(marker);
+            marker.getElement().addEventListener('click', () => {
+                if (onMarkerClick) {
+                    onMarkerClick(punto);
+                }
+            });
+        })
+    }
+
+    static async returnDistanceBetweenUserAndMarker(position: [number, number]): Promise<string> {
+        const userLocation = await this.getUserLocation();
+        if (!userLocation) return "errore";
+
+        // Crea punti turf (nota: turf usa [lng, lat] mentre le coordinate standard sono [lat, lng])
+        const userPoint = turf.point([userLocation[1], userLocation[0]]);
+        const markerPoint = turf.point([position[1], position[0]]);
+
+        // Calcola la distanza in metri
+        return `${turf.distance(userPoint, markerPoint, {units: 'kilometers'}).toFixed(2)} km`;
     }
 }
 

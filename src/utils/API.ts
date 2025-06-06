@@ -134,6 +134,28 @@ class API {
         });
         return this.handleResponse(response);
     }
+
+    static async getPuntiDiInteresse(): Promise<any[]> {
+        try {
+            const response = await fetch(`${this.baseUrl}/pdi`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+                },
+            })
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Errore durante il recupero dei punti di interesse');
+            }
+
+            return response.json();
+        }
+        catch (error) {
+            console.error('Errore:', error);
+            throw new Error('Errore di rete o server non raggiungibile');
+        }
+    }
 }
 
 export default API;
