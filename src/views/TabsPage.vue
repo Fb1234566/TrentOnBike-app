@@ -22,6 +22,11 @@
           <ion-icon aria-hidden="true" :icon="personCircleOutline" />
           <ion-label>Profilo</ion-label>
         </ion-tab-button>
+
+        <ion-tab-button tab="settings" href="/tabs/settings">
+          <ion-icon aria-hidden="true" :icon="settingsOutline" />
+          <ion-label>{{ $t('settingsTabLabel') }}</ion-label>
+        </ion-tab-button>
       </ion-tab-bar>
     </ion-tabs>
   </ion-page>
@@ -29,6 +34,5 @@
 
 <script setup lang="ts">
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
-import { mapOutline, statsChartOutline, personCircleOutline, warningOutline } from 'ionicons/icons';
-// Rimossa homeOutline se non più usata altrove
+import { mapOutline, statsChartOutline, personCircleOutline, warningOutline, settingsOutline } from 'ionicons/icons';
 </script>

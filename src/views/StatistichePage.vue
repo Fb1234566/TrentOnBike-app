@@ -19,7 +19,7 @@
           <ion-text color="danger">Ruolo utente non riconosciuto per visualizzare le statistiche.</ion-text>
         </div>
       </div>
-      <div v-else class="ion-padding">
+      <div v-else class="ion-padding ion-text-center">
         <ion-text>Devi effettuare il login per visualizzare le statistiche.</ion-text>
         <ion-button expand="block" @click="goToLogin">Login</ion-button>
       </div>

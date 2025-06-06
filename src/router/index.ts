@@ -17,7 +17,7 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/tabs/mappa', // Default tab
+        redirect: '/tabs/mappa',
       },
       {
         path: 'mappa',
@@ -39,6 +39,12 @@ const routes: Array<RouteRecordRaw> = [
         path: 'profilo',
         name: 'Profilo',
         component: () => import('@/views/ProfiloPage.vue'),
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/views/SettingsPage.vue'),
+        meta: { requiresAuth: true },
       }
     ],
   },
@@ -82,9 +88,9 @@ router.beforeEach((to, from, next) => {
 
   if ((to.name === 'Login' || to.name === 'Register') && authStore.isAuthenticated) {
     if (authStore.userRole === 'operatore') {
-      next({ path: '/tabs/statistiche' }); 
+      next({ path: '/tabs/statistiche' });
     } else {
-      next({ path: '/tabs/mappa' }); 
+      next({ path: '/tabs/mappa' });
     }
     return;
   }
@@ -108,4 +114,4 @@ router.beforeEach((to, from, next) => {
   }
 });
 
-export default router;  
+export default router;

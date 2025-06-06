@@ -1,0 +1,21 @@
+{
+  "settingsTitle": "Impostazioni Utente",
+  "generalPreferences": "Preferenze Generali",
+  "language": "Lingua",
+  "theme": "Tema Applicazione",
+  "notificationsPOINearby": "Notifiche POI Vicini",
+  "saveSettingsButton": "Salva Impostazioni",
+  "retryButton": "Riprova",
+  "loadingSettings": "Caricamento impostazioni...",
+  "selectLanguage": "Seleziona Lingua",
+  "selectTheme": "Seleziona Tema",
+  "themeLight": "Chiaro",
+  "themeDark": "Scuro",
+  "themeSystem": "Predefinito di Sistema",
+  "errorLoadingSettings": "Impossibile caricare le impostazioni.",
+  "errorSavingSettings": "Errore nel salvataggio delle impostazioni.",
+  "settingsSavedSuccess": "Impostazioni salvate con successo!",
+  "authRequiredSettings": "Devi essere autenticato per visualizzare le impostazioni.",
+  "invalidDataOrNotAuth": "Dati non validi o utente non autenticato.",
+  "settingsTabLabel": "Impostazioni"
+}

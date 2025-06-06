@@ -53,7 +53,7 @@
                   label-placement="floating"
                   :type="showPassword ? 'text' : 'password'"
                   v-model="userData.password"
-                  placeholder="Min. 6 caratteri"
+                  placeholder="Min. 8 caratteri"
                   required
                 ></ion-input>
                  <ion-icon
@@ -115,8 +115,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonInput,
   IonButton, IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonIcon, IonText,
@@ -124,9 +125,11 @@ import {
 } from '@ionic/vue';
 import { personCircleOutline, mailOutline, lockClosedOutline, eyeOutline, eyeOffOutline } from 'ionicons/icons';
 
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+console.log('RegisterPage.vue: Script setup');
 
 const router = useRouter();
+const authStore = useAuthStore();
+
 const userData = ref({
   nome: '',
   cognome: '',
@@ -135,10 +138,14 @@ const userData = ref({
   confirmPassword: ''
 });
 const errorMessage = ref('');
-const successMessage = ref('');
+const successMessage = ref(''); // Not strictly needed if using toasts for success
 const isLoading = ref(false);
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
+
+onMounted(() => {
+  console.log('RegisterPage.vue: Component mounted');
+});
 
 const toggleShowPassword = () => {
   showPassword.value = !showPassword.value;
@@ -155,6 +162,7 @@ const validateForm = () => {
     return 'Le password non coincidono.';
   }
   if (userData.value.password.length < 8) {
+    // Backend ha la sua validazione, questa è una pre-validazione client-side
     return 'La password deve essere di almeno 8 caratteri.';
   }
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -165,8 +173,10 @@ const validateForm = () => {
 };
 
 const handleRegister = async () => {
-  errorMessage.value = validateForm();
-  if (errorMessage.value) {
+  console.log('RegisterPage.vue: handleRegister called');
+  const validationError = validateForm();
+  if (validationError) {
+    errorMessage.value = validationError;
     const toast = await toastController.create({
         message: errorMessage.value,
         duration: 3000,
@@ -178,66 +188,44 @@ const handleRegister = async () => {
   }
 
   isLoading.value = true;
+  errorMessage.value = '';
   successMessage.value = '';
 
-  try {
-    const payload: any = {
-      nome: userData.value.nome,
-      email: userData.value.email,
-      password: userData.value.password,
-    };
-    if (userData.value.cognome) {
-      payload.cognome = userData.value.cognome;
-    }
 
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      errorMessage.value = data.message || `Errore ${response.status}: Impossibile registrarsi.`;
-       const toast = await toastController.create({
-        message: errorMessage.value,
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
-      await toast.present();
-    } else {
-      // Registrazione e login automatico riusciti
-      localStorage.setItem('authToken', data.token);
-      localStorage.setItem('userData', JSON.stringify(data.user));
-
-      const toast = await toastController.create({
-        message: data.message || 'Registrazione e accesso effettuati con successo!',
-        duration: 2000,
-        color: 'success',
-        position: 'top'
-      });
-      await toast.present();
-
-      userData.value = { nome: '', cognome: '', email: '', password: '', confirmPassword: '' };
-      router.push('/');
-    }
-  } catch (error) {
-    console.error('Registration error:', error);
-    errorMessage.value = 'Errore di connessione o del server. Riprova più tardi.';
-    const toast = await toastController.create({
-        message: errorMessage.value,
-        duration: 3000,
-        color: 'danger',
-        position: 'top'
-      });
-    await toast.present();
-  } finally {
-    isLoading.value = false;
+  const payload: any = {
+    nome: userData.value.nome,
+    email: userData.value.email,
+    password: userData.value.password,
+  };
+  if (userData.value.cognome) {
+    payload.cognome = userData.value.cognome;
   }
+
+  const result = await authStore.register(payload);
+
+  if (!result.success) {
+    errorMessage.value = result.message || `Errore: Impossibile registrarsi.`;
+    const toast = await toastController.create({
+      message: errorMessage.value,
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } else {
+    const toast = await toastController.create({
+      message: result.message || 'Registrazione e accesso effettuati con successo!',
+      duration: 2000,
+      color: 'success',
+      position: 'top'
+    });
+    await toast.present();
+    console.log('RegisterPage.vue: Registration successful, redirecting...');
+    userData.value = { nome: '', cognome: '', email: '', password: '', confirmPassword: '' }; // Clear form
+    // Router guards will handle redirection based on role, default for new user is 'utente'
+    router.replace('/tabs/mappa');
+  }
+  isLoading.value = false;
 };
 </script>
 
