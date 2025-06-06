@@ -13,7 +13,7 @@ class Mappa {
     private static watchId: string | null = null;
     static selectedMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker rosso selezionato
     static puntiDiInteresse: any[] = []; // Array per i punti di interesse
-    static puntiDiInteresseMarkers: mapboxgl.Marker[] = []; // Array per i marker dei punti di interesse
+    static puntiDiInteresseMarkers: Map<string, mapboxgl.Marker[]> = new Map(); // Array per i marker dei punti di interesse
 
 
     static async create(mapId: string, mapElement: string, center: [number, number] = [12.5451, 41.8988]) {
@@ -139,7 +139,7 @@ class Mappa {
     }
 
     static async updateUserLocationMarker(mapId: string, userLocation: [number, number] | null) {
-        if (userLocation && Mappa.positionMarker.get(mapId)) {
+        if (userLocation && Mappa.positionMarker.has(mapId)) {
             Mappa.positionMarker.get(mapId).setLngLat(userLocation);
         } else {
             console.warn('Impossibile ottenere la posizione dell\'utente.');
@@ -206,7 +206,11 @@ class Mappa {
             const marker = new mapboxgl.Marker()
                 .setLngLat([punto.posizione[0], punto.posizione[1]])
                 .addTo(Mappa.maps.get(mapId));
-            Mappa.puntiDiInteresseMarkers.push(marker);
+            if ( !(Mappa.puntiDiInteresseMarkers.has(mapId) || Mappa.puntiDiInteresseMarkers.get(mapId) !== undefined)) {
+                Mappa.puntiDiInteresseMarkers.set(mapId, []);
+            }
+            Mappa.puntiDiInteresseMarkers.get(mapId).push(marker);
+
             marker.getElement().addEventListener('click', () => {
                 if (onMarkerClick) {
                     onMarkerClick(punto);
