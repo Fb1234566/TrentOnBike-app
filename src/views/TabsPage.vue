@@ -41,3 +41,13 @@
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
 import { mapOutline, statsChartOutline, personCircleOutline, warningOutline, settingsOutline, golfOutline } from 'ionicons/icons';
 </script>
+
+<style scoped>
+ion-tab-button {
+  --padding-start: 0;
+  --padding-end: 0;
+
+}
+
+</style>
+
