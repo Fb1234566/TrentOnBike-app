@@ -14,14 +14,26 @@
           <ion-title size="large">Percorsi</ion-title>
         </ion-toolbar>
       </ion-header>
-      <div style="margin: 20px; display: flex; align-items: flex-start">
-        <ion-select  placeholder="Difficoltà" v-model="filterPercorsiDiff" @ionChange="handleDiffFilterChange($event)">
-          <ion-select-option value="">Tutte</ion-select-option>
-          <ion-select-option value="Facile">Facile</ion-select-option>
-          <ion-select-option value="Medio">Medio</ion-select-option>
-          <ion-select-option value="Difficile">Difficile</ion-select-option>
-        </ion-select>
+      <div>
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <!-- Barra di ricerca -->
+          <ion-searchbar
+              v-model="searchTerm"
+              placeholder="Cerca percorso"
+              @ionInput="handleSearch"
+          ></ion-searchbar>
+        </div>
+
+        <div style="margin: 0 20px 20px; display: flex; align-items: flex-start">
+          <ion-select  placeholder="Difficoltà" v-model="filterPercorsiDiff" @ionChange="handleDiffFilterChange($event)">
+            <ion-select-option value="">Tutte</ion-select-option>
+            <ion-select-option value="Facile">Facile</ion-select-option>
+            <ion-select-option value="Medio">Medio</ion-select-option>
+            <ion-select-option value="Difficile">Difficile</ion-select-option>
+          </ion-select>
+        </div>
       </div>
+
       <div v-if="percorsiLoaded">
         <ion-card v-for="(item, index) in percorsi" :key="index" class="ion-margin-bottom" @click="goToPercorso($event, item._id)">
           <ion-card-header>
@@ -83,6 +95,8 @@ import {
 import {bicycleOutline, flagOutline, flameOutline} from 'ionicons/icons';
 import API from '@/utils/API';
 import {onMounted, ref} from "vue";
+import { IonSearchbar } from '@ionic/vue';
+const searchTerm = ref("");
 
 const percorsiLoaded = ref(false);
 const percorsi = ref();
@@ -103,22 +117,28 @@ const getPercorsi = async () => {
   }
   try {
     const p = await API.getPercorsi();
-    const percorsi_filtrati:any = [];
+    let percorsi_filtrati: any = [];
+
+    // Filtra prima per difficoltà
     if (filterPercorsiDiff.value !== "") {
       p.forEach((item) => {
         if (item.difficolta == filterPercorsiDiff.value) {
-          percorsi_filtrati.push(item)
+          percorsi_filtrati.push(item);
         }
-      })
-      percorsi.value = percorsi_filtrati;
-    }
-    else {
-      percorsi.value = p;
+      });
+    } else {
+      percorsi_filtrati = [...p];
     }
 
+    // Poi filtra per termine di ricerca
+    if (searchTerm.value.trim() !== "") {
+      percorsi_filtrati = percorsi_filtrati.filter((item) =>
+          item.nome.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+          (item.descrizione && item.descrizione.toLowerCase().includes(searchTerm.value.toLowerCase()))
+      );
+    }
 
-
-
+    percorsi.value = percorsi_filtrati;
   } catch (error) {
     const toast = await toastController.create({
       message: 'Errore nel recupero dei percorsi. Controlla la connessione.',
@@ -130,6 +150,10 @@ const getPercorsi = async () => {
     percorsiLoaded.value = true;
   }
 }
+
+const handleSearch = () => {
+  getPercorsi();
+};
 
 const handleRefresh = (event: CustomEvent) => {
   percorsiLoaded.value = false;
