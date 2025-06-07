@@ -23,7 +23,7 @@
         </ion-select>
       </div>
       <div v-if="percorsiLoaded">
-        <ion-card v-for="(item, index) in percorsi" :key="index" class="ion-margin-bottom">
+        <ion-card v-for="(item, index) in percorsi" :key="index" class="ion-margin-bottom" @click="goToPercorso($event, item._id)">
           <ion-card-header>
             <ion-card-title>{{ item.nome }}</ion-card-title>
             <ion-card-subtitle>{{ item.tipo }}</ion-card-subtitle>
@@ -86,6 +86,8 @@ import {onMounted, ref} from "vue";
 const percorsiLoaded = ref(false);
 const percorsi = ref();
 const filterPercorsiDiff = ref("")
+import { useRouter } from 'vue-router';
+const router = useRouter();
 
 const getPercorsi = async () => {
   if (!window.navigator.onLine) {
@@ -144,6 +146,10 @@ const handleDiffFilterChange = (event: CustomEvent) => {
   filterPercorsiDiff.value = event.detail.value;
   getPercorsi();
 };
+
+const goToPercorso = (event: CustomEvent, id:any) => {
+  router.push({ name: 'Percorso', params: { id } });
+}
 
 onMounted(getPercorsi);
 </script>

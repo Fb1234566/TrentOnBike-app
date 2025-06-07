@@ -64,6 +64,16 @@ const routes: Array<RouteRecordRaw> = [
     component: RegisterPage,
   },
   {
+    path: '/percorso/:id',
+    name: 'Percorso',
+    component: () => import('@/views/DettagliPercorsoPage.vue')
+  },
+  {
+    path: '/percorso/mappa',
+    name: 'MappaPercorso',
+    component: () => import('@/views/MappaPercorsoPage.vue')
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: () => {
       const authStore = useAuthStore();

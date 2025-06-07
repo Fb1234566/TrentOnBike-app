@@ -9,7 +9,7 @@ class Mappa {
     private static maptoken: string = import.meta.env.VITE_MAPBOX_TOKEN;
     private static maps = new Map(); // Mappa per gestire più mappe se necessario
     private static locationStatus: boolean = false;
-    private static positionMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker blu dell'utente
+    static positionMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker blu dell'utente
     private static watchId: string | null = null;
     static selectedMarker: Map<string, mapboxgl.Marker> = new Map(); // Marker rosso selezionato
     static puntiDiInteresse: any[] = []; // Array per i punti di interesse
@@ -229,6 +229,28 @@ class Mappa {
 
         // Calcola la distanza in metri
         return `${turf.distance(userPoint, markerPoint, {units: 'kilometers'}).toFixed(2)} km`;
+    }
+    static addTappeMarkers(mapId: string, tappe: Array<{ posizione: [number, number], numero: number }>) {
+        if (!Mappa.maps.get(mapId)) return;
+        tappe.forEach((tappa, index) => {
+            const markerDiv = document.createElement('div');
+            markerDiv.style.width = '28px';
+            markerDiv.style.height = '28px';
+            markerDiv.style.background = '#4caf50';
+            markerDiv.style.borderRadius = '50%';
+            markerDiv.style.border = '2px solid white';
+            markerDiv.style.display = 'flex';
+            markerDiv.style.alignItems = 'center';
+            markerDiv.style.justifyContent = 'center';
+            markerDiv.style.fontWeight = 'bold';
+            markerDiv.style.color = 'white';
+            markerDiv.style.fontSize = '16px';
+            markerDiv.innerText = index+1;
+
+            new mapboxgl.Marker({ element: markerDiv })
+                .setLngLat(tappa.posizione)
+                .addTo(Mappa.maps.get(mapId));
+        });
     }
 }
 
