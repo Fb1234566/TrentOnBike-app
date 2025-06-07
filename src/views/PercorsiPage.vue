@@ -45,13 +45,14 @@
                 <span style="font-size: 0.95em; color: var(--ion-color-medium); margin-left: 2px;">km</span>
               </div>
             </div>
+            <div class="spacer"></div>
             <ion-text class="ion-padding-top">{{ item.descrizione }}</ion-text>
           </ion-card-content>
         </ion-card>
       </div>
       <div v-if="!percorsiLoaded">
         <ion-text>
-          <ion-spinner class="ion-align-center" name="crescent" style="vertical-align: middle;"></ion-spinner>
+          <ion-spinner class="ion-align-center" name="crescent" style="display: block; margin: 0 auto;"></ion-spinner>
         </ion-text>
       </div>
     </ion-content>
@@ -175,5 +176,10 @@ ion-select,
 ion-textarea {
   --padding-top: 10px; /* Spaziatura interna verticale */
   --padding-bottom: 10px;
+}
+
+.spacer {
+  height: 15px; /* Aggiunge spazio extra scrollabile */
+  background-color: transparent; /* Invisibile */
 }
 </style>
