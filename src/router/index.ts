@@ -45,6 +45,11 @@ const routes: Array<RouteRecordRaw> = [
         name: 'Settings',
         component: () => import('@/views/SettingsPage.vue'),
         meta: { requiresAuth: true },
+      },
+      {
+        path: 'percorsi',
+        name: 'Percorsi',
+        component: () => import('@/views/PercorsiPage.vue')
       }
     ],
   },
@@ -57,6 +62,16 @@ const routes: Array<RouteRecordRaw> = [
     path: '/register',
     name: 'Register',
     component: RegisterPage,
+  },
+  {
+    path: '/percorso/:id',
+    name: 'Percorso',
+    component: () => import('@/views/DettagliPercorsoPage.vue')
+  },
+  {
+    path: '/percorso/mappa',
+    name: 'MappaPercorso',
+    component: () => import('@/views/MappaPercorsoPage.vue')
   },
   {
     path: '/:pathMatch(.*)*',

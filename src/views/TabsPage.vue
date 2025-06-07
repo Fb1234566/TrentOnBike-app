@@ -8,6 +8,11 @@
           <ion-label>Mappa</ion-label>
         </ion-tab-button>
 
+        <ion-tab-button tab="percorsi" href="/tabs/percorsi">
+          <ion-icon aria-hidden="true" :icon="golfOutline" />
+          <ion-label>Percorsi</ion-label>
+        </ion-tab-button>
+
         <ion-tab-button tab="reportIssue" href="/tabs/report-issue">
           <ion-icon aria-hidden="true" :icon="warningOutline" />
           <ion-label>Segnala</ion-label>
@@ -34,5 +39,15 @@
 
 <script setup lang="ts">
 import { IonTabBar, IonTabButton, IonTabs, IonLabel, IonIcon, IonPage, IonRouterOutlet } from '@ionic/vue';
-import { mapOutline, statsChartOutline, personCircleOutline, warningOutline, settingsOutline } from 'ionicons/icons';
+import { mapOutline, statsChartOutline, personCircleOutline, warningOutline, settingsOutline, golfOutline } from 'ionicons/icons';
 </script>
+
+<style scoped>
+ion-tab-button {
+  --padding-start: 0;
+  --padding-end: 0;
+
+}
+
+</style>
+
