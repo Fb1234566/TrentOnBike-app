@@ -23,7 +23,7 @@
           <p><strong>Coordinate:</strong> {{ dettagli.posizione.coordinates.join(', ') }}</p>
 
           <!-- Contenitore della mappa -->
-          <div id="mappaDettagli" style="height: 300px; border: 1px solid #ccc; margin-top: 1rem;"></div>
+          <div id="reportDetailsMap" style="height: 300px; border: 1px solid #ccc; margin-top: 1rem;"></div>
         </ion-card-content>
 
         <!-- Data e Descrizione -->
@@ -71,13 +71,14 @@ import {
 import {ref, onMounted, nextTick} from 'vue';
 import {onBeforeRouteLeave, useRoute, useRouter} from 'vue-router';
 import API from '@/utils/API';
-import Map from '@/utils/Map';
+import Mappa from '@/utils/Mappa';
 import { useReportsStore } from '@/stores/reportsStore';
 
 const route = useRoute();
 const router = useRouter();
 const reportsStore = useReportsStore(); // Usa lo store Pinia
 const dettagli = ref<any>(null);
+const MAP_ID = 'reportDetailsMap';
 
 /**
  * Formatta la data in un formato leggibile
@@ -95,9 +96,17 @@ const formattaData = (dateStr: string) => {
 const initMappa = async (coordinates: [number, number]) => {
   try {
     await nextTick();
-    await Map.create(coordinates, 'mappaDettagli'); // Passa l'ID specifico per la mappa nei dettagli
-    await Map.addSelectedMarker(coordinates); // Aggiungi il marker rosso
-    await Map.moveToLocation(coordinates); // Sposta e zooma sulla segnalazione
+    // Verifica che il container esista e controlla se è nascosto o vuoto
+    const container = document.getElementById('reportDetailsMap');
+    if (!container) {
+      console.error('Errore: Container per la mappa non trovato.');
+      return;
+    }
+    console.log("Creo una nuova mappa per la pagina");
+    await Mappa.create(MAP_ID, 'reportDetailsMap', coordinates); // crea la mappa per la pagina
+    Mappa.getMap(MAP_ID).resize();
+    await Mappa.addSelectedMarker(MAP_ID, coordinates); // Aggiungi il marker rosso
+    await Mappa.moveToLocation(MAP_ID, coordinates); // Sposta e zooma sulla segnalazione
   } catch (error) {
     console.error("Errore durante l'inizializzazione della mappa:", error);
   }
@@ -157,8 +166,7 @@ const tornaIndietro = () => {
  * Hook per intercettare l'uscita dalla pagina e aggiornare store segnalazioni
  */
 onBeforeRouteLeave(async (to, from, next) => {
-  // Rimuovere la mappa dal container "mappaDettagli"
-  Map.removeMap('mappaDettagli');
+  Mappa.getMap(MAP_ID).remove();
   // Esegui la funzione per la verifica aggiornamenti
   await reportsStore.verificaAggiornamento();
   next(); // Consenti la navigazione
@@ -168,7 +176,7 @@ onMounted(caricaDettagliSegnalazione);
 </script>
 
 <style scoped>
-#mappa {
+#reportDetailsMap {
   width: 100%;
   height: 300px;
   border-radius: 8px;

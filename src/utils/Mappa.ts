@@ -165,7 +165,7 @@ class Mappa {
     }
 
     static clearSegnalazioniMarkers(mapId: string): void {
-        Mappa.maps.get(mapId).markers.forEach((marker) => marker.remove());
+        Mappa.segnalazioniMarkers.forEach((marker: mapboxgl.Marker) => marker.remove());
         Mappa.segnalazioniMarkers = []; // Svuota array di markers
     }
 

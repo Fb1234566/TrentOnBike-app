@@ -121,11 +121,12 @@ const formData = ref({
 });
 
 const loading = ref(false);
+const MAP_ID = 'segnalazione-map';
 
 /** Inizializza la mappa e gestisce la logica del marker */
 const initMappa = async () => {
   const posizioneUtente = await Map.getUserLocation();
-  await Map.create("segnalazione-map", "segnalazione-map",  posizioneUtente ?? [12.5451, 41.8988]);
+  await Map.create(MAP_ID, "segnalazione-map",  posizioneUtente ?? [12.5451, 41.8988]);
   if (posizioneUtente) {
     formData.value.posizione.coordinates = posizioneUtente;
     await Map.addUserLocationMarker("segnalazione-map", posizioneUtente);
@@ -144,10 +145,10 @@ const resetToCurrentLocation = async () => {
   const posizioneUtente = await Map.getUserLocation();
   if (posizioneUtente) {
     formData.value.posizione.coordinates = posizioneUtente;
-    await Map.addUserLocationMarker("segnalazione-map", posizioneUtente); // Aggiorna il marker blu
-    await Map.moveToUserLocation("segnalazione-map"); // Sposta la mappa sulla posizione corrente
+    await Map.addUserLocationMarker(MAP_ID, posizioneUtente); // Aggiorna il marker blu
+    await Map.moveToUserLocation(MAP_ID); // Sposta la mappa sulla posizione corrente
     if (Map.selectedMarker) {
-      Map.selectedMarker.remove(); // Rimuovi il marker rosso
+      Map.selectedMarker.get(MAP_ID)?.remove(); // Rimuovi il marker rosso
     }
   } else {
     alert('Impossibile ottenere la posizione corrente.');

@@ -36,7 +36,7 @@ export const useReportsStore = defineStore('reports', {
          * Controlla se l'elenco delle segnalazioni è aggiornato rispetto al backend.
          * Se non lo è, aggiorna automaticamente.
          */
-        async verificaAggiornamento() {
+        async verificaAggiornamento(): Promise<boolean> {
             try {
                 // Chiama l'API per ottenere l'ultimo valore di lastReportsUpdate
                 const response = await API.getGlobalTimestamp('lastReportsUpdate');
@@ -47,11 +47,14 @@ export const useReportsStore = defineStore('reports', {
                     console.log('La lista di segnalazioni non è aggiornata, ricarico...');
                     await this.caricaTutteLeSegnalazioni(); // Aggiorna le segnalazioni
                     this.lastUpdate = backendLastUpdate; // Aggiorna il valore nello store
+                    return true;
                 } else {
                     console.log('La lista di segnalazioni è già aggiornata.');
+                    return false;
                 }
             } catch (error) {
                 console.error('Errore durante la verifica degli aggiornamenti:', error);
+                return false;
             }
         }
     }
