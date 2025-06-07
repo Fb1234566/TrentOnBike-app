@@ -220,7 +220,7 @@ const createCircleMarker = (color: string) => {
 const initPagina = async () => {
   // Assicuriamoci che id sia una stringa
   const percorsoId = Array.isArray(id) ? id[0] : id;
-  percorso.value = await API.getPercorso(percorsoId) as Percorso;
+  percorso.value = await API.getPercorso(percorsoId);
 
   // Aggiungi controllo null
   if (percorso.value && percorso.value.tappe) {

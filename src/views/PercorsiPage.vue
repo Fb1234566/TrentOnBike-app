@@ -31,6 +31,12 @@
             <ion-select-option value="Medio">Medio</ion-select-option>
             <ion-select-option value="Difficile">Difficile</ion-select-option>
           </ion-select>
+          <ion-select  placeholder="Tipo" v-model="filterPercorsiTipo" @ionChange="handleTipoFilterChange($event)">
+            <ion-select-option value="">Tutti</ion-select-option>
+            <ion-select-option value="TURISTICO">Turistico</ion-select-option>
+            <ion-select-option value="SUGGERITO_COMUNE">Suggerito comune</ion-select-option>
+            <ion-select-option value="UTENTE">Utente</ion-select-option>
+          </ion-select>
         </div>
       </div>
 
@@ -81,7 +87,6 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
-  IonItem,
   IonPage,
   IonRefresher,
   IonSelect,
@@ -101,6 +106,7 @@ const searchTerm = ref("");
 const percorsiLoaded = ref(false);
 const percorsi = ref();
 const filterPercorsiDiff = ref("")
+const filterPercorsiTipo = ref("")
 import { useRouter } from 'vue-router';
 const router = useRouter();
 
@@ -117,17 +123,16 @@ const getPercorsi = async () => {
   }
   try {
     const p = await API.getPercorsi();
-    let percorsi_filtrati: any = [];
+    let percorsi_filtrati;
 
-    // Filtra prima per difficoltà
-    if (filterPercorsiDiff.value !== "") {
-      p.forEach((item) => {
-        if (item.difficolta == filterPercorsiDiff.value) {
-          percorsi_filtrati.push(item);
-        }
-      });
+    if (filterPercorsiDiff.value !== "" && filterPercorsiTipo.value !== "") {
+      percorsi_filtrati = p.filter(item => item.difficolta === filterPercorsiDiff.value && item.tipo === filterPercorsiTipo.value);
+    } else if (filterPercorsiDiff.value !== "") {
+      percorsi_filtrati = p.filter(item => item.difficolta === filterPercorsiDiff.value);
+    } else if (filterPercorsiTipo.value !== "") {
+      percorsi_filtrati = p.filter(item => item.tipo === filterPercorsiTipo.value);
     } else {
-      percorsi_filtrati = [...p];
+      percorsi_filtrati = p;
     }
 
     // Poi filtra per termine di ricerca
@@ -169,6 +174,10 @@ const handleRefresh = (event: CustomEvent) => {
 
 const handleDiffFilterChange = (event: CustomEvent) => {
   filterPercorsiDiff.value = event.detail.value;
+  getPercorsi();
+};
+const handleTipoFilterChange = (event: CustomEvent) => {
+  filterPercorsiTipo.value = event.detail.value;
   getPercorsi();
 };
 
