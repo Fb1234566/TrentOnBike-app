@@ -136,26 +136,34 @@ class API {
         return this.handleResponse(response);
     }
 
-    static async getPuntiDiInteresse(): Promise<any[]> {
-        try {
-            const response = await fetch(`${this.baseUrl}/pdi`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-                },
-            })
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Errore durante il recupero dei punti di interesse');
-            }
+    static async getPuntiDiInteresse(filters: Record<string, any> = {} ): Promise<any[]> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
 
-            return response.json();
-        }
-        catch (error) {
-            console.error('Errore:', error);
-            throw new Error('Errore di rete o server non raggiungibile');
-        }
+        // Costruzione dei parametri di query dai filtri
+        const queryParams = new URLSearchParams();
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null) {
+                if (Array.isArray(value)) {
+                    queryParams.set(key, value.join(','));
+                } else {
+                    queryParams.set(key, value.toString());
+                }
+            }
+        });
+
+        // Costruzione dell'URL con eventuali parametri
+        const url = `${this.baseUrl}/pdi${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return this.handleResponse(response);
     }
 
     static async getPercorsi(): Promise<any[]> {
