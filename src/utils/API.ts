@@ -1,5 +1,5 @@
-import { useAuthStore } from '@/stores/auth';
-import { API_BASE_URL } from '@/config';
+import {useAuthStore} from '@/stores/auth';
+import {API_BASE_URL} from '@/config';
 
 class API {
     static baseUrl = API_BASE_URL;
@@ -24,7 +24,7 @@ class API {
                     errorMessage = errorData.message || errorMessage;
                 } else {
                     const errorText = await response.text();
-                    errorMessage = errorText || `Errore server: ${errorText.substring(0,100)}`;
+                    errorMessage = errorText || `Errore server: ${errorText.substring(0, 100)}`;
                 }
             } catch (e) {
                 // Non fare nulla
@@ -37,7 +37,7 @@ class API {
 
     static async testConnection(): Promise<boolean> {
         try {
-            const response = await fetch(`${this.baseUrl}/docs`, { method: 'GET' });
+            const response = await fetch(`${this.baseUrl}/docs`, {method: 'GET'});
             return response.ok;
         } catch (error) {
             return false;
@@ -93,7 +93,7 @@ class API {
         const url = `${this.baseUrl}/segnalazioni/mie?${queryParams.toString()}`;
         const response = await fetch(url, {
             method: 'GET',
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {Authorization: `Bearer ${token}`},
         });
         return this.handleResponse(response);
     }
@@ -123,7 +123,7 @@ class API {
         limit?: number;
     }): Promise<any> {
         const token = this.getAuthToken();
-         if (!token) throw new Error("Autenticazione richiesta.");
+        if (!token) throw new Error("Autenticazione richiesta.");
 
         const queryParams = new URLSearchParams();
         if (filtri.nomeVia) queryParams.set('nomeVia', filtri.nomeVia);
@@ -137,12 +137,12 @@ class API {
 
         const response = await fetch(`${this.baseUrl}/statisticheVie/storico?${queryParams.toString()}`, {
             method: 'GET',
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {Authorization: `Bearer ${token}`},
         });
         return this.handleResponse(response);
     }
 
-    static async getPuntiDiInteresse(filters: Record<string, any> = {} ): Promise<any[]> {
+    static async getPuntiDiInteresse(filters: Record<string, any> = {}): Promise<any[]> {
         const token = this.getAuthToken();
         if (!token) throw new Error("Token di autenticazione mancante.");
 
@@ -186,8 +186,7 @@ class API {
                 throw new Error(error.message || 'Errore durante il recupero dei punti di interesse');
             }
             return response.json();
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Errore:', error);
             throw new Error('Errore di rete o server non raggiungibile');
         }
@@ -207,8 +206,7 @@ class API {
                 throw new Error(error.message || 'Errore durante il recupero dei punti di interesse');
             }
             return response.json();
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Errore:', error);
             throw new Error('Errore di rete o server non raggiungibile');
         }
@@ -334,6 +332,20 @@ class API {
         });
         return this.handleResponse(response);
     }
+
+    static async getInstructions(coords: [Number, Number][]) {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const url = `${this.baseUrl}/indicazioni/route?${coords.map(coord => `coord=${coord.join(',')}`).join('&')}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
+    };
 }
 
 export default API;

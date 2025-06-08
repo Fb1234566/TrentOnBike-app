@@ -183,8 +183,8 @@ const applicaFiltroTipoPdi = async (filtro: OpzioneFiltro) => {
                   max-height: 200px; z-index: 1000; overflow-y: auto; border-radius: 0;">
     <ion-card-header>
       <ion-button fill="clear" size="large" @click="chiudiCard"
-                  style="position: absolute; top: 5px; right: 5px;">
-        <ion-icon aria-hidden="true" :icon="closeOutline" />
+                  style="position: absolute; top: 5px; right: 5px; z-index: 10;">
+        <ion-icon slot="icon-only" aria-hidden="true" :icon="closeOutline" />
       </ion-button>
       <ion-card-title>{{ puntoSelezionato?.nome }}</ion-card-title>
       <ion-card-subtitle>{{ distanza }}</ion-card-subtitle>
