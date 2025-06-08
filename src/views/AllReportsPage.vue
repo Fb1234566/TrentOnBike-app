@@ -66,13 +66,13 @@ import {
   IonCardContent,
 } from '@ionic/vue';
 
-import { computed, nextTick } from 'vue';
-import { useRouter } from 'vue-router';
-import { onIonViewWillEnter, onIonViewWillLeave } from '@ionic/vue';
+import { computed, nextTick, onMounted, watch} from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useReportsStore } from '@/stores/reportsStore';
 import Mappa from '@/utils/Mappa';
 import mapboxgl from "mapbox-gl";
 
+const route = useRoute();
 const reportsStore = useReportsStore(); // Usa lo store Pinia
 const segnalazioni = computed(() => reportsStore.segnalazioni); // Reactive binding
 const router = useRouter(); // Crea l'istanza del router all'interno del setup del componente
@@ -162,7 +162,7 @@ const formattaData = (dateStr: string) => {
  */
 const apriSegnalazione = (segnalazione: any) => {
   console.log('Naviga ai dettagli della segnalazione con ID:', segnalazione._id);
-  router.push(`/reports/${segnalazione._id}`); // Naviga alla route corrispondente
+  router.push(`/tabs/segnalazioni/${segnalazione._id}`); // Naviga alla route corrispondente
 };
 
 /**
@@ -187,17 +187,30 @@ const stopInterval = () => {
   }
 };
 
-// All'entrata verifica se sono presenti aggiornamenti e aggiorna la mappa se necessario
-onIonViewWillEnter(async () => {
+onMounted(async () => {
+  console.log("onMounted AllReportsPage");
   await reportsStore.verificaAggiornamento(); // Verifica se sono presenti aggiornamenti nel database
   await initMappa(); // Inizializza la mappa
   startInterval(); // fa partire il controllo automatico della lista e dei marker sulla mappa
 });
 
-// Arresta l'intervallo quando la pagina viene chiusa
-onIonViewWillLeave(() => {
-  stopInterval();
-});
+// Effettuo operazioni all'entrata e uscita dalla pagina
+watch(
+    () => route.fullPath,
+    async (newPath, oldPath) => {
+      if (newPath === '/tabs/segnalazioni' || newPath === '/reports') {
+        console.log("entrato in AllReportsPage");
+        const mappaDaAggiornare = await reportsStore.verificaAggiornamento();
+        if (mappaDaAggiornare) {
+          await aggiornaMarkers();
+        }
+        startInterval();
+      } else if (oldPath === '/tabs/segnalazioni' || oldPath === '/reports') {
+        console.log("uscito da AllReportsPage");
+        stopInterval();
+      }
+    }
+);
 </script>
 
 <style scoped>

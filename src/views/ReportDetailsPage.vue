@@ -314,8 +314,6 @@ const tornaIndietro = () => {
  */
 onBeforeRouteLeave(async (to, from, next) => {
   Mappa.getMap(MAP_ID).remove();
-  // Esegui la funzione per la verifica aggiornamenti
-  await reportsStore.verificaAggiornamento();
   next(); // Consenti la navigazione
 });
 

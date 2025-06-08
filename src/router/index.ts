@@ -24,11 +24,20 @@ const routes: Array<RouteRecordRaw> = [
         name: 'Mappa',
         component: () => import('@/views/MappaPage.vue'),
       },
-      {
-        path: 'report-issue',
-        name: 'ReportIssueTab',
+      { // Tab Segnala per utente
+        path: 'segnala',
+        name: 'Segnala',
         component: () => import('@/views/ReportIssuePage.vue'),
-        meta: { allowedRoles: ['utente', 'operatore', 'admin'] },
+      },
+      {// Tab Segnalazioni per operatore
+        path: 'segnalazioni',
+        name: 'Segnalazioni',
+        component: () => import('@/views/AllReportsPage.vue'),
+      },
+      { // Tab dettagli segnalazione per operatore
+        path: 'segnalazioni/:id',
+        name: 'SegnalazioneDettaglio',
+        component: () => import('@/views/ReportDetailsPage.vue'),
       },
       {
         path: 'statistiche',
@@ -83,6 +92,7 @@ const routes: Array<RouteRecordRaw> = [
       return '/login';
     },
   },
+    /*
     {
         path: '/reports',
         name: 'Reports',
@@ -93,6 +103,7 @@ const routes: Array<RouteRecordRaw> = [
         name: 'ReportDetails',
         component: () => import ('@/views/ReportDetailsPage.vue'),
     },
+     */
 ];
 
 const router = createRouter({
