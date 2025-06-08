@@ -27,7 +27,7 @@
 
             <ion-list>
               <ion-item v-for="(istruzione, index) in istruzioni" :key="index">
-                <ion-icon :icon="navigateOutline" slot="start" color="primary"></ion-icon>
+                <ion-label style="max-width: 30px !important; text-align: center" slot="start" color="primary">{{ index + 1 }}</ion-label>
                 <ion-label>
                   <h2>{{ istruzione.instruction }}</h2>
                   <p>{{ istruzione.distance }} m · {{ istruzione.duration }} min</p>
@@ -66,7 +66,6 @@ import {
 import {
   listOutline,
   closeOutline,
-  navigateOutline,
 } from 'ionicons/icons';
 import Map from '@/utils/Mappa';
 import {onMounted, onUnmounted, ref, computed} from "vue";
@@ -228,9 +227,13 @@ ion-card {
 
 ion-list {
   padding-top: 0;
+  background: transparent;
 }
 
 ion-item {
   --padding-start: 8px;
+  --background: transparent;
+  --background-hover: var(--ion-color-light);
 }
+
 </style>
