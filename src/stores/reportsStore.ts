@@ -23,16 +23,6 @@ export const useReportsStore = defineStore('reports', {
         },
 
         /**
-         * Aggiorna lo stato di una specifica segnalazione nella lista.
-         */
-        aggiornaSegnalazione(id: string, updates: Partial<any>) {
-            const segnalazione = this.segnalazioni.find(s => s._id === id);
-            if (segnalazione) {
-                Object.assign(segnalazione, updates); // Aggiorna i campi modificati
-            }
-        },
-
-        /**
          * Controlla se l'elenco delle segnalazioni è aggiornato rispetto al backend.
          * Se non lo è, aggiorna automaticamente.
          */

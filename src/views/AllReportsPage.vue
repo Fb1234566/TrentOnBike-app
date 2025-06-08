@@ -22,11 +22,20 @@
                 @click="apriSegnalazione(segnalazione)"
             >
               <ion-label>
-                <h2>{{ segnalazione.categoria }}</h2>
-                <p>Posizione: {{ segnalazione.posizione.via || 'Via sconosciuta' }}</p>
-                <p>Creata il: {{ formattaData(segnalazione.creataIl) }}</p>
-                <p v-if="segnalazione.lettaDalComune"><strong>Stato:</strong> Letta</p>
-                <p v-else><strong>Stato:</strong> Da leggere</p>
+                <h2>{{ segnalazione.categoria.replaceAll('_', ' ') }}</h2>
+                <p><strong>Posizione:</strong> {{ segnalazione.posizione.via || 'Via sconosciuta' }}</p>
+                <p><strong>Creata il:</strong> {{ formattaData(segnalazione.creataIl) }}</p>
+                <!-- Stato con icona -->
+                <p>
+                  <strong>Stato:</strong>
+                  <span>{{ getStatoIcona(segnalazione.stato) }} {{ segnalazione.stato.replace('_', ' ') }}</span>
+                </p>
+              </ion-label>
+              <!-- Stato lettura allineato a destra -->
+              <ion-label slot="end" class="stato-lettura">
+                <p :class="{ 'da-leggere': !segnalazione.lettaDalComune }">
+                  {{ segnalazione.lettaDalComune ? 'Letta' : 'Da leggere' }}
+                </p>
               </ion-label>
             </ion-item>
           </ion-list>
@@ -57,7 +66,7 @@ import {
   IonCardContent,
 } from '@ionic/vue';
 
-import { onMounted, computed, nextTick } from 'vue';
+import { computed, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { onIonViewWillEnter, onIonViewWillLeave } from '@ionic/vue';
 import { useReportsStore } from '@/stores/reportsStore';
@@ -68,6 +77,26 @@ const reportsStore = useReportsStore(); // Usa lo store Pinia
 const segnalazioni = computed(() => reportsStore.segnalazioni); // Reactive binding
 const router = useRouter(); // Crea l'istanza del router all'interno del setup del componente
 const MAP_ID = 'allReportsMap';
+
+/**
+ * Restituisce l'icona corrispondente per il dato stato.
+ * @param {string} stato - Lo stato della segnalazione
+ * @returns {string} L'icona corrispondente
+ */
+const getStatoIcona = (stato: string): string => {
+  switch (stato) {
+    case 'DA_VERIFICARE':
+      return '🟡'; // Icona gialla per "Da verificare"
+    case 'ATTIVA':
+      return '🔴'; // Icona rossa per "Attiva"
+    case 'RISOLTA':
+      return '✅'; // Icona verde per "Risolta"
+    case 'SCARTATA':
+      return '❌'; // Icona per "Scartata"
+    default:
+      return '❓'; // Icona di default per stati sconosciuti
+  }
+};
 
 /**
  * Funzione che aggiorna i marker della mappa con le posizioni delle segnalazioni e con bounds
@@ -194,5 +223,13 @@ onIonViewWillLeave(() => {
   width: 70%; /* Occupare il 70% della larghezza rimanente */
   padding: 1rem;
   overflow-y: auto; /* Aggiunge scroll verticale se necessario */
+}
+ion-label p strong {
+  font-weight: bold; /* Grassetto per il titolo */
+}
+
+ion-label p span {
+  font-style: italic; /* Corsivo per il valore dello stato */
+  margin-left: 5px; /* Spazio tra "Stato:" e il valore */
 }
 </style>

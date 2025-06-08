@@ -264,6 +264,38 @@ class API {
         return this.handleResponse(response);
     }
 
+    // Metodo per cambiare lo stato di una segnalazione
+    static async cambiaStatoSegnalazione(id: string, nuovoStato: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+
+        const response = await fetch(`${this.baseUrl}/segnalazioni/${id}/stato`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ stato: nuovoStato }),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per aggiornare il commento di una segnalazione
+    static async aggiornaCommentoSegnalazione(id: string, commento: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+
+        const response = await fetch(`${this.baseUrl}/segnalazioni/${id}/commento`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ commento }),
+        });
+        return this.handleResponse(response);
+    }
+
     // Metodo per ottenere una variabile globale Timestamp
     static async getGlobalTimestamp(key: string): Promise<{ key: string; value: string }> {
         const token = this.getAuthToken();
