@@ -5,7 +5,7 @@
         <ion-title>Accesso Utente</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" class="ion-padding">
+    <ion-content class="ion-padding">
       <div class="login-container">
         <ion-card class="login-card">
           <ion-card-header>
