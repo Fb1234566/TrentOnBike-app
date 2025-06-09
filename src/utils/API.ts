@@ -78,8 +78,14 @@ class API {
         const queryParams = new URLSearchParams();
         if (params.stati) queryParams.set('stati', params.stati.join(','));
         if (params.categorie) queryParams.set('categorie', params.categorie.join(','));
-        if (params.daData) queryParams.set('daData', params.daData);
-        if (params.aData) queryParams.set('aData', params.aData);
+        if (params.daData) {
+            const daDataISO = new Date(params.daData).toISOString();
+            queryParams.set('daData', daDataISO);
+        }
+        if (params.aData) {
+            const aDataISO = new Date(params.aData).toISOString();
+            queryParams.set('aData', aDataISO);
+        }
         if (params.ordine) queryParams.set('ordine', params.ordine);
         if (params.direzione) queryParams.set('direction', params.direzione);
         if (params.limit) queryParams.set('limit', params.limit.toString());
@@ -206,6 +212,127 @@ class API {
             console.error('Errore:', error);
             throw new Error('Errore di rete o server non raggiungibile');
         }
+    }
+
+    // Metodo per ottenere tutte le segnalazioni (accessibile agli operatori)
+    static async caricaTutteLeSegnalazioni(params: {
+        stati?: string[];
+        categorie?: string[];
+        daData?: string;
+        aData?: string;
+        ordine?: string;
+        direzione?: 'asc' | 'desc';
+        limit?: number;
+        lettaDalComune?: boolean;
+        gruppoSegnalazioni?: boolean;
+        via?: string;
+        lat?: number;
+        lng?: number;
+        raggio?: number;
+    } = {}): Promise<any[]> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+
+        const queryParams = new URLSearchParams();
+        if (params.stati) queryParams.set('stati', params.stati.join(','));
+        if (params.categorie) queryParams.set('categorie', params.categorie.join(','));
+        if (params.daData){
+            const daDataISO = new Date(params.daData).toISOString();
+            queryParams.set('daData', daDataISO);
+        }
+        if (params.aData) {
+            const aDataISO = new Date(params.aData).toISOString();
+            queryParams.set('aData', aDataISO);
+        }
+        if (params.ordine) queryParams.set('ordine', params.ordine);
+        if (params.direzione) queryParams.set('direction', params.direzione);
+        if (params.limit !== undefined) queryParams.set('limit', params.limit.toString());
+        if (params.lettaDalComune !== undefined) queryParams.set('lettaDalComune', String(params.lettaDalComune));
+        if (params.gruppoSegnalazioni !== undefined) queryParams.set('gruppoSegnalazioni', String(params.gruppoSegnalazioni));
+        if (params.via) queryParams.set('via', params.via);
+        if (params.lat !== undefined) queryParams.set('lat', params.lat.toString());
+        if (params.lng !== undefined) queryParams.set('lng', params.lng.toString());
+        if (params.raggio !== undefined) queryParams.set('raggio', params.raggio.toString());
+
+        const url = `${this.baseUrl}/segnalazioni?${queryParams.toString()}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per ottenere i dettagli di una singola segnalazione
+    static async caricaDettaglioSegnalazione(id: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/segnalazioni/${id}`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per segnare una segnalazione come "letta"
+    static async segnaSegnalazioneComeLetta(id: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/segnalazioni/${id}/lettura`, { // Corretto da "/letta" a "/lettura"
+            method: 'PATCH',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per cambiare lo stato di una segnalazione
+    static async cambiaStatoSegnalazione(id: string, nuovoStato: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+
+        const response = await fetch(`${this.baseUrl}/segnalazioni/${id}/stato`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ stato: nuovoStato }),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per aggiornare il commento di una segnalazione
+    static async aggiornaCommentoSegnalazione(id: string, commento: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+
+        const response = await fetch(`${this.baseUrl}/segnalazioni/${id}/commento`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ commento }),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per ottenere una variabile globale Timestamp
+    static async getGlobalTimestamp(key: string): Promise<{ key: string; value: string }> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/globalTimestamps/${key}`, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return this.handleResponse(response);
     }
 }
 

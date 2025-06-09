@@ -123,14 +123,11 @@ const handleLogin = async () => {
     // Reindirizza alla pagina desiderata dopo il login
     const redirectPath = route.query.redirect as string | undefined;
     if (redirectPath) {
-        router.replace(redirectPath);
+      router.replace(redirectPath).then(() => window.location.reload());
     } else {
         // Logica di reindirizzamento basata sul ruolo
-        if (result.user.ruolo === 'operatore') {
-            router.replace({ path: '/tabs/statistiche' });
-        } else {
-            router.replace({ path: '/tabs/mappa' });
-        }
+      const targetPath = result.user.ruolo === 'operatore' ? '/tabs/statistiche' : '/tabs/mappa';
+      router.replace(targetPath).then(() => window.location.reload());
     }
   } else {
     errorMessage.value = result.message || 'Errore imprevisto durante il login.';

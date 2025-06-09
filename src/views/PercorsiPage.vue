@@ -95,7 +95,8 @@ import {
   IonText,
   IonTitle,
   IonToolbar,
-  toastController
+  toastController,
+  IonRefresherContent,
 } from '@ionic/vue';
 import {bicycleOutline, flagOutline, flameOutline} from 'ionicons/icons';
 import API from '@/utils/API';

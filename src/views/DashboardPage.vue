@@ -27,15 +27,15 @@
             <p>Questa è la dashboard riservata agli operatori.</p>
             <p>Qui puoi accedere a strumenti e funzionalità di gestione.</p>
             <ion-list>
-              <ion-item button @click="manageReports" detail="true">
+              <ion-item button @click="manageReports" :detail="true">
                 <ion-icon :icon="documentTextOutline" slot="start" color="primary"></ion-icon>
                 <ion-label>Gestisci Segnalazioni</ion-label>
               </ion-item>
-              <ion-item button @click="viewUserStats" detail="true">
+              <ion-item button @click="viewUserStats" :detail="true">
                 <ion-icon :icon="statsChartOutline" slot="start" color="success"></ion-icon>
                 <ion-label>Visualizza Statistiche Utenti</ion-label>
               </ion-item>
-              <ion-item button @click="configureSystem" detail="true">
+              <ion-item button @click="configureSystem" :detail="true">
                 <ion-icon :icon="settingsOutline" slot="start" color="warning"></ion-icon>
                 <ion-label>Configura Sistema</ion-label>
               </ion-item>
@@ -101,8 +101,7 @@ const handleLogout = async () => {
 };
 
 const manageReports = async () => {
-  const toast = await toastController.create({ message: 'Funzione "Gestisci Segnalazioni" non implementata.', duration: 2000, position: 'bottom' });
-  await toast.present();
+  await router.push('/reports'); // Naviga alla pagina delle segnalazioni
 };
 const viewUserStats = async () => {
   const toast = await toastController.create({ message: 'Funzione "Visualizza Statistiche Utenti" non implementata.', duration: 2000, position: 'bottom' });
