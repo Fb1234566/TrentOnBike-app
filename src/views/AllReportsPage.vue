@@ -305,11 +305,9 @@ const aggiornaMarkers = async () => {
 const initMappa = async () => {
   try {
     const posizioneStandard: [number, number] = [11.121749, 46.074779]; // Posizione di default: Trento
-    await nextTick();
     if(!Mappa.getMap(MAP_ID)){
       await Mappa.create(MAP_ID, 'allReportsMap', posizioneStandard); // Inizializza la mappa senza bounds
     }
-    await nextTick();
     Mappa.getMap(MAP_ID).resize(); // resize deve essere chiamato solo quando il container è completamente visibile
     await aggiornaMarkers(); // Aggiunge i marker alla mappa
   } catch (error) {
