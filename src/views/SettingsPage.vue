@@ -5,7 +5,7 @@
         <ion-title>{{ $t('settingsTitle') }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" class="ion-padding">
+    <ion-content class="ion-padding">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">{{ $t('settingsTitle') }}</ion-title>

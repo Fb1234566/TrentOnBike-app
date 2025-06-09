@@ -8,7 +8,7 @@
         <ion-title>Mappa percorso</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" class="report-issue-content">
+    <ion-content class="report-issue-content">
       <div id="percorso-map" style="width: 100%; height: 100%;"></div>
       <!-- Floating Action Button per le istruzioni -->
       <ion-fab vertical="bottom" horizontal="end" slot="fixed" v-if="istruzioni.length > 0">
