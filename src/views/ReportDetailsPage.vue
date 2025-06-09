@@ -37,6 +37,7 @@
           <!-- Data e Descrizione -->
           <ion-card-content>
             <p><strong>Data di creazione:</strong> {{ formattaData(dettagli.creataIl) }}</p>
+            <p><strong>Ultima modifica:</strong> {{ formattaData(dettagli.ultimaModificaIl) }}</p>
             <p>
               <strong>Descrizione:</strong>
               {{ dettagli.descrizione || "Descrizione non fornita." }}
@@ -130,6 +131,7 @@ import {
   IonSelectOption,
   IonSpinner,
   IonTextarea,
+  toastController,
 } from '@ionic/vue';
 import {ref, onMounted, nextTick} from 'vue';
 import {onBeforeRouteLeave, useRoute, useRouter} from 'vue-router';
@@ -237,10 +239,22 @@ const cambiaStato = async () => {
     await API.cambiaStatoSegnalazione(dettagli.value._id, nuovoStato.value); // Chiama l'API per il cambio stato
     dettagli.value.stato = nuovoStato.value; // Aggiorna lo stato visualizzato
     nuovoStato.value = null; // Resetta il dropdown
-    alert('Stato aggiornato con successo');
+    const toast = await toastController.create({
+      message: 'Stato aggiornato con successo',
+      duration: 2000,
+      position: 'top',
+      color: 'success',
+    })
+    await toast.present();
   } catch (error) {
     console.error('Errore durante il cambio dello stato:', error);
-    alert('Errore durante il cambio dello stato.');
+    const toast = await toastController.create({
+      message: 'Errore durante il cambio dello stato',
+      duration: 2000,
+      position: 'top',
+      color: 'danger',
+    })
+    await toast.present();
   }
 };
 
@@ -258,11 +272,17 @@ const annullaModificaCommento = () => {
 const confermaModificaCommento = async () => {
   try{
     // Garantisce che il valore commento da inviare sia una stringa valida
-    const nuovoCommento = typeof modificaCommento.value === 'string' ? modificaCommento.value.trim() : '';
+    const nuovoCommento = modificaCommento.value.trim();
 
     // Controlliamo che il commento effettivamente cambi
     if (nuovoCommento === dettagli.value.commento) {
-      alert('Nessuna modifica al commento.');
+      const toast = await toastController.create({
+        message: 'Nessuna modifica al commento.',
+        duration: 2000,
+        position: 'top',
+        color: "warning",
+      })
+      await toast.present();
       return;
     }
 
@@ -270,10 +290,22 @@ const confermaModificaCommento = async () => {
     await API.aggiornaCommentoSegnalazione(dettagli.value._id, nuovoCommento);
 
     dettagli.value.commento = nuovoCommento;
-    alert('Commento aggiornato con successo');
+    const toast = await toastController.create({
+      message: 'Commento aggiornato con successo',
+      duration: 2000,
+      position: 'top',
+      color: 'success',
+    })
+    await toast.present();
   } catch (error) {
     console.error('Errore durante la modifica del commento:', error);
-    alert('Errore durante la modifica del commento.');
+    const toast = await toastController.create({
+      message: 'Errore durante la modifica del commento',
+      duration: 2000,
+      position: 'top',
+      color: 'danger',
+    })
+    await toast.present();
   } finally {
     inModificaCommento.value = false;
   }
@@ -287,7 +319,13 @@ const richiediRimozioneCommento = () => {
 const rimuoviCommento = async () => {
   await API.aggiornaCommentoSegnalazione(dettagli.value._id, '');
   dettagli.value.commento = '';
-  alert('Commento rimosso con successo');
+  const toast = await toastController.create({
+    message: 'Commento rimosso con successo',
+    duration: 2000,
+    position: 'top',
+    color: 'success',
+  })
+  await toast.present();
 };
 
 /**
