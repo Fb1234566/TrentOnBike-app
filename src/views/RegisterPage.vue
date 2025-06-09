@@ -8,7 +8,7 @@
         <ion-title>Registrazione</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" class="ion-padding">
+    <ion-content class="ion-padding">
       <div class="register-container">
         <ion-card class="register-card">
           <ion-card-header>

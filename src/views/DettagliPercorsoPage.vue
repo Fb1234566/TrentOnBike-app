@@ -8,7 +8,7 @@
         <ion-title>{{ percorso.nome }}</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" class="report-issue-content">
+    <ion-content class="report-issue-content">
       <ion-header collapse="condense">
         <ion-toolbar>
           <ion-title size="large">Percorso</ion-title>

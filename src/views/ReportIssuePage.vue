@@ -8,7 +8,7 @@
         <ion-title>Segnala un problema al Comune</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true" class="report-issue-content">
+    <ion-content class="report-issue-content">
       <div class="content-wrapper">
 
         <!-- Mappa -->
