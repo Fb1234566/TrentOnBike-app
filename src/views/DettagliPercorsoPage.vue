@@ -220,7 +220,7 @@
           </ion-button>
 
           <ion-select v-model="poiNuovaTappa" label="Punto di Interesse">
-            <ion-select-option v-for="poi in poisDisponibili" :key="poi.id" :value="poi">
+            <ion-select-option v-for="poi in poisDisponibili" :key="poi._id" :value="poi">
               <ion-label class="poi-option">
                 <strong>{{ poi.nome }}</strong><br />
               </ion-label>
@@ -243,7 +243,7 @@
 import Mappa from "@/utils/Mappa";
 
 interface PuntoDiInteresse {
-  id: string;
+  _id: string;
   nome: string;
   tipoPoi?: string;
   descrizione?: string;
@@ -251,7 +251,7 @@ interface PuntoDiInteresse {
 }
 
 interface Tappa {
-  id: string;
+  _id: string;
   ordine: number;
   descrizione?: string;
   posizione?: string[];
@@ -477,7 +477,7 @@ const confermaRimozioneTappa = async (index: number) => {
   if (!conferma) return;
 
   try {
-    const idTappa = percorso.value.tappe[index].id; // supponendo che ogni tappa abbia un `id`
+    const idTappa = percorso.value.tappe[index]._id; // supponendo che ogni tappa abbia un `id`
     const idP = Array.isArray(id) ? id[0] : id;
     await API.deleteTappa(idP, idTappa);
   } catch (err) {
@@ -535,7 +535,7 @@ const confermaAggiuntaTappa = async () => {
     ordine: percorso.value.tappe.length,
     descrizione: descrizioneTappa.value,
     posizione: [lonTappa.value, latTappa.value],
-    puntoDiInteresse: poiNuovaTappa.value?.id
+    puntoDiInteresse: poiNuovaTappa.value?._id
   }
   try {
     // chiama API per fare post della tappa
@@ -551,8 +551,10 @@ const confermaAggiuntaTappa = async () => {
 const iniziaModificaTappa = async () => {
   if (!tappaSelezionata.value) return;
   descrizioneTappa.value = tappaSelezionata.value.descrizione || '';
-  tempLatTappa.value = tappaSelezionata.value.posizione?.[0] || '';
+  tempLonTappa.value = tappaSelezionata.value.posizione?.[0] || '';
+  lonTappa.value = tappaSelezionata.value.posizione?.[0] || '';
   tempLatTappa.value = tappaSelezionata.value.posizione?.[1] || '';
+  latTappa.value = tappaSelezionata.value.posizione?.[1] || '';
   isEditingTappa.value = true;
 };
 
@@ -570,7 +572,7 @@ const salvaModificheTappa = async () => {
   isSaving.value = true;
   try {
     const idP = Array.isArray(id) ? id[0] : id;
-    const idTappa = tappaSelezionata.value.id;
+    const idTappa = tappaSelezionata.value._id;
     const tappaDaInviare = {
       ...tappaSelezionata.value,
       descrizione: descrizioneTappa.value,
@@ -578,8 +580,10 @@ const salvaModificheTappa = async () => {
     };
     console.log("Salvataggio tappa:", tappaDaInviare);
     await API.patchTappa(idP, idTappa, tappaDaInviare);
-    isEditingTappa.value = false;
     await initPagina();
+    tappaSelezionata.value.descrizione = percorso.value.tappe[tappaSelezionata.value.ordine - 1].descrizione;
+    tappaSelezionata.value.posizione = [lonTappa.value, latTappa.value];
+    isEditingTappa.value = false;
     } catch (error) {
       console.error("Errore nel salvataggio:", error);
     } finally {
@@ -624,7 +628,7 @@ const salvaModifichePoi = async () => {
       ...tappaSelezionata.value.puntoDiInteresse,
       posizione: [lonPOI.value, latPOI.value]
     };
-    await API.patchPDI(poiDaInviare.id, poiDaInviare);
+    await API.patchPDI(poiDaInviare._id, poiDaInviare);
     isEditingPoi.value = false;
     await initPagina();
   } catch (error) {

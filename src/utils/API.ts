@@ -395,7 +395,7 @@ class API {
     static async patchTappa(idPercorso: string, idTappa: string, tappa: any): Promise<any> {
         const token = this.getAuthToken();
         if (!token) throw new Error("Token di autenticazione mancante.");
-        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappature/${idTappa}`, {
+        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappe/${idTappa}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -410,7 +410,7 @@ class API {
     static async postTappa(idPercorso: string, tappa: any): Promise<any> {
         const token = this.getAuthToken();
         if (!token) throw new Error("Token di autenticazione mancante.");
-        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappature`, {
+        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappa`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -425,7 +425,7 @@ class API {
     static async deleteTappa(idPercorso: string, idTappa: string): Promise<any> {
         const token = this.getAuthToken();
         if (!token) throw new Error("Token di autenticazione mancante.");
-        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappature/${idTappa}`, {
+        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappe/${idTappa}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
