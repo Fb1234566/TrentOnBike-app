@@ -228,7 +228,7 @@
           </ion-select>
 
           <ion-button expand="block" color="success" @click="confermaAggiuntaTappa" :disabled="!isTappaFormCompleto">
-            Conferma (DEBUG: {{poiNuovaTappa}})
+            Conferma
           </ion-button>
         </ion-content>
       </ion-modal>
