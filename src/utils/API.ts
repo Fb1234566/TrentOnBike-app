@@ -385,6 +385,7 @@ class API {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
             },
         });
         return this.handleResponse(response);
