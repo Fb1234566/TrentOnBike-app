@@ -477,20 +477,6 @@ class API {
         });
         return this.handleResponse(response);
     }
-
-    static async getInstructions(coords: [Number, Number][]) {
-        const token = this.getAuthToken();
-        if (!token) throw new Error("Token di autenticazione mancante.");
-        const url = `${this.baseUrl}/indicazioni/route?${coords.map(coord => `coord=${coord.join(',')}`).join('&')}`;
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return this.handleResponse(response);
-    };
 }
 
 export default API;
