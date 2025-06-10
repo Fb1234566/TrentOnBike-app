@@ -346,6 +346,137 @@ class API {
         });
         return this.handleResponse(response);
     };
+
+    // Metodo per modificare un percorso
+    static async patchPercorso(id: string, percorso: any): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/percorsi/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(percorso),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per creare un nuovo percorso
+    static async postPercorso(percorso: any): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/percorsi`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(percorso),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per eliminare un percorso
+    static async deletePercorso(id: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/percorsi/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per modificare una tappa di un percorso
+    static async patchTappa(idPercorso: string, idTappa: string, tappa: any): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappature/${idTappa}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(tappa),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per creare una tappa di un percorso
+    static async postTappa(idPercorso: string, tappa: any): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappature`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(tappa),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per eliminare una tappa di un percorso
+    static async deleteTappa(idPercorso: string, idTappa: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/percorsi/${idPercorso}/tappature/${idTappa}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per modificare un poi di un percorso
+    static async patchPDI(id: string, pdi: any): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/pdi/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(pdi),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per creare un poi di un percorso
+    static async postPDI(pdi: any): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/pdi`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(pdi),
+        });
+        return this.handleResponse(response);
+    }
+
+    // Metodo per eliminare un poi di un percorso
+    static async deletePDI(id: string): Promise<any> {
+        const token = this.getAuthToken();
+        if (!token) throw new Error("Token di autenticazione mancante.");
+        const response = await fetch(`${this.baseUrl}/pdi/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            }
+        });
+        return this.handleResponse(response);
+    }
+
 }
 
 export default API;

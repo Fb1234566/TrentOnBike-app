@@ -462,9 +462,8 @@ const annullaModifichePercorso = () => {
 const salvaModifichePercorso = async () => {
   isSaving.value = true;
   try {
-    // TODO: Chiamata API per salvare le modifiche
-    console.log("Chiamata PATCH ipotetica all’API con:", percorso.value);
-    // await API.patchPercorso(percorso.value); // quando disponibile
+    const idP = Array.isArray(id) ? id[0] : id;
+    await API.patchPercorso(idP, percorso.value);
     isEditing.value = false;
   } catch (error) {
     console.error("Errore nel salvataggio:", error);
@@ -479,8 +478,8 @@ const confermaRimozioneTappa = async (index: number) => {
 
   try {
     const idTappa = percorso.value.tappe[index].id; // supponendo che ogni tappa abbia un `id`
-    //TODO
-    //await API.deleteTappa(id, idTappa); // da implementare
+    const idP = Array.isArray(id) ? id[0] : id;
+    await API.deleteTappa(idP, idTappa);
   } catch (err) {
     console.error("Errore nella rimozione della tappa:", err);
   }
@@ -492,8 +491,7 @@ const aggiungiTappa = async () => {
   poisDisponibili.value = await API.getPuntiDiInteresse();
   // Reset form
   descrizioneTappa.value = '';
-  poiNuovaTappa.value = null;
-      //{ id: '', nome: '', tipoPoi: '', descrizione: '', posizione: ['', '']};
+  poiNuovaTappa.value = null; // altrimenti { id: '', nome: '', tipoPoi: '', descrizione: '', posizione: ['', '']};
   lonTappa.value = '';
   latTappa.value = '';
   showModalNuovaTappa.value = true;
@@ -540,8 +538,9 @@ const confermaAggiuntaTappa = async () => {
     puntoDiInteresse: poiNuovaTappa.value?.id
   }
   try {
-    //TODO
-    //await API.postTappa(id, nuovaTappa); // da implementare
+    // chiama API per fare post della tappa
+    const idP = Array.isArray(id) ? id[0] : id;
+    await API.postTappa(idP, tappaDaInviare);
     await initPagina();
   } catch (err) {
     console.error("Errore aggiunta tappa:", err);
@@ -567,15 +566,23 @@ const annullaModificheTappa = () => {
 };
 
 const salvaModificheTappa = async () => {
+  if (!tappaSelezionata.value) return;
   isSaving.value = true;
   try {
-    // TODO: Chiamata API per salvare le modifiche
-    console.log("Chiamata PATCH ipotetica all’API con:", percorso.value);
-    // await API.patchTappa(percorso.value); // quando disponibile
+    const idP = Array.isArray(id) ? id[0] : id;
+    const idTappa = tappaSelezionata.value.id;
+    const tappaDaInviare = {
+      ...tappaSelezionata.value,
+      descrizione: descrizioneTappa.value,
+      posizione: [lonTappa.value, latTappa.value]
+    };
+    console.log("Salvataggio tappa:", tappaDaInviare);
+    await API.patchTappa(idP, idTappa, tappaDaInviare);
     isEditingTappa.value = false;
-  } catch (error) {
-    console.error("Errore nel salvataggio:", error);
-  } finally {
+    await initPagina();
+    } catch (error) {
+      console.error("Errore nel salvataggio:", error);
+    } finally {
     isSaving.value = false;
   }
 };
@@ -613,12 +620,13 @@ const salvaModifichePoi = async () => {
   if (!tappaSelezionata.value?.puntoDiInteresse) return;
   isSaving.value = true;
   try{
-    // Salva anche le nuove coordinate aggiornate nel POI
-    tappaSelezionata.value.puntoDiInteresse.posizione = [lonPOI.value, latPOI.value];
-    //TODO: chiamata patch POI
-    console.log("Salvataggio POI:", tappaSelezionata.value.puntoDiInteresse);
-    // await API.patchPoi(tappaSelezionata.value.puntoDiInteresse);
+    const poiDaInviare = {
+      ...tappaSelezionata.value.puntoDiInteresse,
+      posizione: [lonPOI.value, latPOI.value]
+    };
+    await API.patchPDI(poiDaInviare.id, poiDaInviare);
     isEditingPoi.value = false;
+    await initPagina();
   } catch (error) {
     console.error("Errore nel salvataggio:", error);
   } finally {
