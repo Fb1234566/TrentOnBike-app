@@ -1,6 +1,6 @@
 import mapboxgl from 'mapbox-gl';
-import { Capacitor } from '@capacitor/core';
-import { Geolocation } from '@capacitor/geolocation';
+import {Capacitor} from '@capacitor/core';
+import {Geolocation} from '@capacitor/geolocation';
 import API from "@/utils/API";
 import * as turf from '@turf/turf';
 
@@ -93,7 +93,11 @@ class Mappa {
                         console.error('Errore geolocalizzazione (PWA):', error);
                         resolve(null);
                     },
-                    {enableHighAccuracy: true, timeout: 5000}
+                    {
+                        enableHighAccuracy: false,
+                        timeout: 150000,             // Aumenta il timeout a 15 secondi
+                        maximumAge: 150000           // Accetta posizioni in cache fino a 30 secondi
+                    }           // Forza una posizione fresca}
                 );
             });
         }
@@ -157,7 +161,7 @@ class Mappa {
         MarkerSelezionato.style.borderRadius = '50%';
         MarkerSelezionato.style.border = '2px solid white';
 
-        const marker = new mapboxgl.Marker({ element: MarkerSelezionato })
+        const marker = new mapboxgl.Marker({element: MarkerSelezionato})
             .setLngLat(position)
             .addTo(Mappa.maps.get(mapId));
 
@@ -275,6 +279,7 @@ class Mappa {
         // Calcola la distanza in metri
         return `${turf.distance(userPoint, markerPoint, {units: 'kilometers'}).toFixed(2)} km`;
     }
+
     static addTappeMarkers(mapId: string, tappe: Array<{ posizione: [number, number], numero: number }>) {
         if (!Mappa.maps.get(mapId)) return;
         tappe.forEach((tappa, index) => {
@@ -290,9 +295,9 @@ class Mappa {
             markerDiv.style.fontWeight = 'bold';
             markerDiv.style.color = 'white';
             markerDiv.style.fontSize = '16px';
-            markerDiv.innerText = String(index+1);
+            markerDiv.innerText = String(index + 1);
 
-            new mapboxgl.Marker({ element: markerDiv })
+            new mapboxgl.Marker({element: markerDiv})
                 .setLngLat(tappa.posizione)
                 .addTo(Mappa.maps.get(mapId));
         });
