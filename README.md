@@ -43,6 +43,10 @@ Per creare una build ottimizzata per la produzione su Android:
 
 3. Dopo aver eseguito `npx cap open android`, si aprirà Android Studio. Da lì potrai generare l'APK per l'installazione su dispositivi Android.
 
+
+## Video DEMO
+link al video: https://mega.nz/file/nbIxlRrC#UKBTdIAfS4HXJqWoy4_k4qlzX4dGGZ2BwcXs4GRjjcs
+
 ## Componenti del Gruppo
 
 - [Filippo Benedetti](https://github.com/Fb1234566)
