@@ -141,6 +141,7 @@
                 </ion-card-content>
               </ion-card>
               <!-- Filtro spaziale placeholder (in futuro) -->
+              <!--
               <ion-card class="filtro-card filtro-spaziale-placeholder">
                 <ion-card-header>
                   <ion-card-title>Filtro spaziale</ion-card-title>
@@ -149,6 +150,7 @@
                   <p>In sviluppo...</p>
                 </ion-card-content>
               </ion-card>
+              -->
             </div>
             <div class="wrap-group">
               <ion-button @click="applicaFiltriAvanzati">Applica filtri avanzati</ion-button>
@@ -528,7 +530,6 @@ ion-content {
   align-items: flex-start;
   padding: 1rem;
   gap: 10px;
-  background-color: #f5f5f5;
 }
 .wrap-group {
   display: flex;
@@ -606,7 +607,6 @@ ion-checkbox {
 }
 .filtri-avanzati-container {
   width: 100%;
-  background-color: #eaeaea;
   padding: 1rem;
   border-radius: 8px;
   margin-top: 1rem;
@@ -620,7 +620,6 @@ ion-checkbox {
 .filtri-avanzati-container h3 {
   margin-bottom: 1rem;
   font-size: 1.2rem;
-  color: #333;
 }
 ion-datetime {
   font-size: 1rem;

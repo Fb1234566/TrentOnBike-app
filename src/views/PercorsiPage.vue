@@ -40,8 +40,15 @@
         </div>
       </div>
 
+      <div v-if="isOperatore" style="margin: 16px 20px;">
+        <ion-button @click="openModal">Aggiungi Percorso</ion-button>
+        <ion-button @click="toggleModalitàEliminazione" color="danger">
+          {{ modalitaEliminazione ? 'Termina rimozione percorsi' : 'Rimuovi percorsi' }}
+        </ion-button>
+      </div>
+
       <div v-if="percorsiLoaded">
-        <ion-card v-for="(item, index) in percorsi" :key="index" class="ion-margin-bottom" @click="goToPercorso($event, item._id)">
+        <ion-card v-for="(item, index) in percorsi" :key="index" class="ion-margin-bottom" @click="!modalitaEliminazione ? goToPercorso($event, item._id) : null">
           <ion-card-header>
             <ion-card-title>{{ item.nome }}</ion-card-title>
             <ion-card-subtitle>{{ item.tipo }}</ion-card-subtitle>
@@ -65,6 +72,16 @@
             </div>
             <div class="spacer"></div>
             <ion-text class="ion-padding-top">{{ item.descrizione }}</ion-text>
+
+            <!-- Bottone rimuovi visibile solo in modalità eliminazione -->
+            <ion-button
+                v-if="modalitaEliminazione"
+                color="danger"
+                style="margin-top: 12px"
+                @click.stop="confermaRimozione(item._id)"
+            >
+              Rimuovi
+            </ion-button>
           </ion-card-content>
         </ion-card>
       </div>
@@ -75,6 +92,50 @@
       </div>
     </ion-content>
   </ion-page>
+  <ion-modal :is-open="showModal" @didDismiss="onClose" @willDismiss="onClose">
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Aggiungi Percorso</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="onClose">Chiudi</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <ion-item>
+        <ion-label>Nome: </ion-label>
+        <ion-input v-model="form.nome"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Descrizione: </ion-label>
+        <ion-input v-model="form.descrizione"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Tipo</ion-label>
+        <ion-select v-model="form.tipo">
+          <ion-select-option value="TURISTICO">Turistico</ion-select-option>
+          <ion-select-option value="SUGGERITO_COMUNE">Suggerito dal Comune</ion-select-option>
+          <ion-select-option value="UTENTE">Utente</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Difficoltà</ion-label>
+        <ion-select v-model="form.difficolta">
+          <ion-select-option value="Facile">Facile</ion-select-option>
+          <ion-select-option value="Medio">Medio</ion-select-option>
+          <ion-select-option value="Difficile">Difficile</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-button expand="block" @click="submitForm"
+                  :disabled="!form.nome || !form.descrizione || !form.tipo || !form.difficolta">
+        Crea Percorso
+      </ion-button>
+    </ion-content>
+  </ion-modal>
 </template>
 
 <script setup lang="ts">
@@ -97,11 +158,19 @@ import {
   IonToolbar,
   toastController,
   IonRefresherContent,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonModal,
+  IonButtons,
+  alertController,
 } from '@ionic/vue';
 import {bicycleOutline, flagOutline, flameOutline} from 'ionicons/icons';
 import API from '@/utils/API';
-import {onMounted, ref} from "vue";
+import { computed, onMounted, ref, watch} from "vue";
 import { IonSearchbar } from '@ionic/vue';
+import { useAuthStore } from "@/stores/auth";
 const searchTerm = ref("");
 
 const percorsiLoaded = ref(false);
@@ -110,6 +179,98 @@ const filterPercorsiDiff = ref("")
 const filterPercorsiTipo = ref("")
 import { useRouter } from 'vue-router';
 const router = useRouter();
+const authStore = useAuthStore();
+
+const isOperatore = computed(() => authStore.userRole === 'operatore');
+const showModal = ref(false);
+const modalitaEliminazione = ref(false);
+
+const toggleModalitàEliminazione = () => {
+  modalitaEliminazione.value = !modalitaEliminazione.value;
+  if (!modalitaEliminazione.value) {
+    getPercorsi();
+  }
+};
+
+const confermaRimozione = async (percorsoId: string) => {
+  const alert = await alertController.create({
+    header: 'Conferma',
+    message: 'Sei sicuro di voler rimuovere questo percorso?',
+    buttons: [
+      {
+        text: 'Annulla',
+        role: 'cancel',
+      },
+      {
+        text: 'Rimuovi',
+        handler: async () => {
+          await API.deletePercorso(percorsoId);
+          const toast = await toastController.create({
+            message: 'Percorso rimosso con successo.',
+            duration: 2000,
+            color: 'success',
+          });
+          await toast.present();
+          await getPercorsi();
+        }
+      }
+    ]
+  });
+  await alert.present();
+};
+
+const openModal = () => {
+  form.value = getEmptyForm();
+  showModal.value = true;
+};
+
+const onClose = () => {
+  showModal.value = false;
+  form.value = getEmptyForm(); // Reset del form ogni volta che si chiude
+};
+
+const form = ref({
+  nome: '',
+  descrizione: '',
+  tipo: '',
+  difficolta: '',
+  createdBy: authStore.user?._id || '',
+});
+
+const getEmptyForm = () => ({
+  nome: '',
+  descrizione: '',
+  tipo: '',
+  difficolta: '',
+  createdBy: authStore.user?._id || ''
+});
+
+const submitForm = async () => {
+  try {
+    const payload = {
+      ...form.value,
+    };
+    await API.postPercorso(payload);
+
+    const toast = await toastController.create({
+      message: 'Percorso creato con successo!',
+      duration: 2000,
+      color: 'success'
+    });
+    await toast.present();
+    await getPercorsi();
+    form.value = getEmptyForm();
+    showModal.value = false;
+
+  } catch (err) {
+    const toast = await toastController.create({
+      message: 'Errore nella creazione del percorso.',
+      duration: 2000,
+      color: 'danger'
+    });
+    await toast.present();
+  }
+};
 
 const getPercorsi = async () => {
   if (!window.navigator.onLine) {
@@ -186,7 +347,13 @@ const goToPercorso = (event: CustomEvent, id:any) => {
   router.push({ name: 'Percorso', params: { id } });
 }
 
-onMounted(getPercorsi);
+const goToGestisciPoi = () => {
+  router.push({ name: 'GestisciPoi' });
+}
+
+onMounted(() => {
+  getPercorsi();
+});
 </script>
 
 <style scoped>
@@ -215,5 +382,9 @@ ion-textarea {
 .spacer {
   height: 15px; /* Aggiunge spazio extra scrollabile */
   background-color: transparent; /* Invisibile */
+}
+ion-label {
+  font-weight: bold;
+  padding-right: 20px;
 }
 </style>
